@@ -161,33 +161,33 @@ LocalizationTask::getVirtualValenceOrbitalIndices() {
   OutputControl::nOut << "  Rydberg-like orbitals will be localized separately or not at all." << std::endl;
   return std::make_pair(valenceRange, rydbergRange);
 }
-template<Options::SCF_MODES T>
+template<Options::SCF_MODES SCFMode>
 void LocalizationTask::runByLastSCFMode() {
-  std::shared_ptr<Localization<T>> localizationRoutine;
+  std::shared_ptr<Localization<SCFMode>> localizationRoutine;
   switch (settings.locType) {
     case Options::ORBITAL_LOCALIZATION_ALGORITHMS::FOSTER_BOYS:
-      localizationRoutine = std::make_shared<FosterBoysLocalization<T>>(_systemController);
+      localizationRoutine = std::make_shared<FosterBoysLocalization<SCFMode>>(_systemController);
       printSubSectionTitle("Running Foster-Boys Localization");
       break;
     case Options::ORBITAL_LOCALIZATION_ALGORITHMS::PIPEK_MEZEY:
-      localizationRoutine = std::make_shared<PipekMezeyLocalization<T>>(_systemController);
+      localizationRoutine = std::make_shared<PipekMezeyLocalization<SCFMode>>(_systemController);
       printSubSectionTitle("Running Pipek-Mezey Localization");
       break;
     case Options::ORBITAL_LOCALIZATION_ALGORITHMS::IBO:
-      localizationRoutine = std::make_shared<IBOLocalization<T>>(_systemController, false, settings.replaceVirtuals);
+      localizationRoutine = std::make_shared<IBOLocalization<SCFMode>>(_systemController, false, settings.replaceVirtuals);
       printSubSectionTitle("Running IBO Localization");
       break;
     case Options::ORBITAL_LOCALIZATION_ALGORITHMS::IAO:
       // TODO: Does this actually do anything? Projecting on the IAOs and back should not change the orbitals.
-      localizationRoutine = std::make_shared<IBOLocalization<T>>(_systemController, true, settings.replaceVirtuals);
+      localizationRoutine = std::make_shared<IBOLocalization<SCFMode>>(_systemController, true, settings.replaceVirtuals);
       printSubSectionTitle("Running IAO Localization");
       break;
     case Options::ORBITAL_LOCALIZATION_ALGORITHMS::EDMISTON_RUEDENBERG:
-      localizationRoutine = std::make_shared<EdmistonRuedenbergLocalization<T>>(_systemController);
+      localizationRoutine = std::make_shared<EdmistonRuedenbergLocalization<SCFMode>>(_systemController);
       printSubSectionTitle("Running Edmiston-Ruedenberg Localization");
       break;
     case Options::ORBITAL_LOCALIZATION_ALGORITHMS::NON_ORTHOGONAL:
-      localizationRoutine = std::make_shared<NonOrthogonalLocalization<T>>(_systemController);
+      localizationRoutine = std::make_shared<NonOrthogonalLocalization<SCFMode>>(_systemController);
       printSubSectionTitle("Running Non-Orthogonal Localization");
       break;
     case Options::ORBITAL_LOCALIZATION_ALGORITHMS::ALIGN:
@@ -195,8 +195,9 @@ void LocalizationTask::runByLastSCFMode() {
         throw SerenityError("Orbital alignment was requested without any template system.\n"
                             "Please specify a template system in the task input via the env keyword.");
       }
-      localizationRoutine = std::make_shared<OrbitalAligner<T>>(_systemController, _templateSystem[0], settings.alignExponent,
-                                                                settings.useKineticAlign, settings.replaceVirtuals);
+      localizationRoutine =
+          std::make_shared<OrbitalAligner<SCFMode>>(_systemController, _templateSystem[0], settings.alignExponent,
+                                                    settings.useKineticAlign, settings.replaceVirtuals);
       printSubSectionTitle("Running IBO-Like Orbital Alignment");
       break;
     case Options::ORBITAL_LOCALIZATION_ALGORITHMS::NONE:
@@ -205,9 +206,9 @@ void LocalizationTask::runByLastSCFMode() {
       return;
   }
 
-  auto densMatrix(_systemController->getElectronicStructure<T>()->getDensityMatrix());
-  auto orbitals = _systemController->getActiveOrbitalController<T>();
-  auto valenceAndCoreOrbitalIndices = getValenceOrbitalIndices<T>();
+  auto densMatrix(_systemController->getElectronicStructure<SCFMode>()->getDensityMatrix());
+  auto orbitals = _systemController->getActiveOrbitalController<SCFMode>();
+  auto valenceAndCoreOrbitalIndices = getValenceOrbitalIndices<SCFMode>();
   localizationRoutine->localizeOrbitals(*orbitals, settings.maxSweeps, valenceAndCoreOrbitalIndices.first);
   if (settings.splitValenceAndCore) {
     OutputControl::nOut << "  Running orbital localization for core orbitals." << std::endl;
@@ -218,7 +219,7 @@ void LocalizationTask::runByLastSCFMode() {
         settings.locType == Options::ORBITAL_LOCALIZATION_ALGORITHMS::ALIGN ||
         settings.locType == Options::ORBITAL_LOCALIZATION_ALGORITHMS::IAO) {
       OutputControl::nOut << "  Running orbital localization for virtual orbitals." << std::endl;
-      auto virtualOrbitalRanges = this->template getVirtualValenceOrbitalIndices<T>();
+      auto virtualOrbitalRanges = this->template getVirtualValenceOrbitalIndices<SCFMode>();
       localizationRoutine->localizeOrbitals(*orbitals, settings.maxSweeps, virtualOrbitalRanges.first);
     }
     else {
@@ -226,7 +227,7 @@ void LocalizationTask::runByLastSCFMode() {
     }
   }
 
-  DensityMatrixController<T> densMatContr(orbitals, _systemController->getNOccupiedOrbitals<T>());
+  DensityMatrixController<SCFMode> densMatContr(orbitals, _systemController->getNOccupiedOrbitals<SCFMode>());
   densMatContr.updateDensityMatrix();
   auto densMatNew = densMatContr.getDensityMatrix();
   double densMatrixDiff = 0.0;
@@ -240,9 +241,9 @@ void LocalizationTask::runByLastSCFMode() {
     WarningTracker::printWarning(
         (std::string) "Warning: Density Matrix Changed! Largest absolute change: " + fabs(densMatrixDiff), true);
   };
-  if (_systemController->getElectronicStructure<T>()->getDiskMode() != true) {
-    _systemController->getElectronicStructure<T>()->toHDF5(_systemController->getHDF5BaseName(),
-                                                           _systemController->getSystemIdentifier());
+  if (_systemController->getElectronicStructure<SCFMode>()->getDiskMode() != true) {
+    _systemController->getElectronicStructure<SCFMode>()->toHDF5(_systemController->getHDF5BaseName(),
+                                                                 _systemController->getSystemIdentifier());
   }
 }
 

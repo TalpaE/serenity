@@ -35,7 +35,7 @@
 
 namespace Serenity {
 class SystemController;
-template<Options::SCF_MODES T>
+template<Options::SCF_MODES SCFMode>
 class PotentialBundle;
 class EnergyComponentController;
 
@@ -109,9 +109,9 @@ class FDETask : public Task {
       visit_each(c, v);
       return;
     }
-    if (c.embedding.visitSettings(v, blockname))
+    if (c.embedding.visitAsBlockSettings(v, blockname))
       return;
-    if (c.lcSettings.visitSettings(v, blockname))
+    if (c.lcSettings.visitAsBlockSettings(v, blockname))
       return;
     if (c.loc.visitAsBlockSettings(v, blockname))
       return;

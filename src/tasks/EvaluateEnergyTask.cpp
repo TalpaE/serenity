@@ -58,8 +58,12 @@ void EvaluateEnergyTask<SCFMode>::run() {
      */
     auto system = _systemController[0];
     auto originalXCfunc = (system->getSettings()).dft.functional;
+    auto originalCustomXCfunc = system->getSettings().customFunc;
     if (settings.useDifferentXCFunc) {
       system->setXCfunctional(settings.XCfunctional);
+      if (settings.customFunc.basicFunctionals.size()) {
+        system->setXCfunctional(settings.customFunc);
+      }
     }
     ScfTask<SCFMode> scf(_systemController[0]);
     scf.settings.skipSCF = true;
@@ -69,6 +73,7 @@ void EvaluateEnergyTask<SCFMode>::run() {
     scf.settings.maxCycles = settings.maxCycles;
     scf.run();
     system->setXCfunctional(originalXCfunc);
+    system->setXCfunctional(originalCustomXCfunc);
   }
   /*
    * sDFT evaluation
@@ -77,14 +82,19 @@ void EvaluateEnergyTask<SCFMode>::run() {
     std::shared_ptr<SystemController> activeSystem;
     std::vector<std::shared_ptr<SystemController>> envSystems;
     std::vector<CompositeFunctionals::XCFUNCTIONALS> originalXCfunc;
+    std::vector<CUSTOMFUNCTIONAL> originalCustomXCfunc;
     /*
      * construct Systems with the new XC func
      */
 
     for (unsigned int i = 0; i < _systemController.size(); i++) {
       originalXCfunc.push_back((_systemController[i]->getSettings()).dft.functional);
+      originalCustomXCfunc.push_back(_systemController[i]->getSettings().customFunc);
       if (settings.useDifferentXCFunc) {
         _systemController[i]->setXCfunctional(settings.XCfunctional);
+        if (settings.customFunc.basicFunctionals.size()) {
+          _systemController[i]->setXCfunctional(settings.customFunc);
+        }
       }
 
       // Update the energies of the subsystems
@@ -108,7 +118,7 @@ void EvaluateEnergyTask<SCFMode>::run() {
     auto eCont = activeSystem->getElectronicStructure<SCFMode>()->getEnergyComponentController();
 
     /*
-     * Evaluate the non-additive kinietik energy from orthogonalized orbitals
+     * Evaluate the non-additive kinietic energy from orthogonalized orbitals
      */
 
     if (settings.evalTsOrtho) {
@@ -140,6 +150,7 @@ void EvaluateEnergyTask<SCFMode>::run() {
     eCont->printAllComponents();
     for (unsigned int i = 0; i < _systemController.size(); i++) {
       _systemController[i]->setXCfunctional(originalXCfunc[i]);
+      _systemController[i]->setXCfunctional(originalCustomXCfunc[i]);
     }
   }
 }

@@ -20,10 +20,12 @@
 
 /* Include Class Header*/
 #include "tasks/GWTask.h"
+/* Include Serenity Internal Headers */
 #include "data/ElectronicStructure.h"
 #include "data/OrbitalController.h"
 #include "geometry/Geometry.h"
-#include "grid/GridControllerFactory.h"
+#include "grid/AtomCenteredGridControllerFactory.h"
+#include "parameters/Constants.h"
 #include "postHF/LRSCF/LRSCFController.h"
 #include "postHF/LRSCF/Tools/RIIntegrals.h"
 #include "postHF/MBPT/GW_Analytic.h"
@@ -34,6 +36,7 @@
 #include "settings/Settings.h"
 #include "system/SystemController.h"
 #include "tasks/LRSCFTask.h"
+/* Include Std and External Headers */
 #include <math.h>
 #include <Eigen/Dense>
 #include <iomanip>
@@ -123,10 +126,12 @@ void GWTask<SCFMode>::run() {
     superSystemGeometry->deleteIdenticalAtoms();
     // supersystem grid
     std::shared_ptr<GridController> supersystemgrid =
-        GridControllerFactory::produce(superSystemGeometry, _act[0]->getSettings().grid);
+        AtomCenteredGridControllerFactory::produce(superSystemGeometry, _act[0]->getSettings().grid);
     _act[0]->setGridController(supersystemgrid);
     // XC Func
-    auto functional = resolveFunctional(_act[0]->getSettings().dft.functional);
+    auto functional = _act[0]->getSettings().customFunc.basicFunctionals.size()
+                          ? Functional(_act[0]->getSettings().customFunc)
+                          : resolveFunctional(_act[0]->getSettings().dft.functional);
     if (functional.isRSHybrid())
       throw SerenityError(" RS-Hybrid Functional not supported for GW calculations! ");
     std::shared_ptr<FuncPotential<SCFMode>> Vxc(new FuncPotential<SCFMode>(
@@ -246,7 +251,9 @@ void GWTask<SCFMode>::run() {
   else if (settings.mbpttype == Options::MBPT::RPA) {
     printSectionTitle("RPA Module");
     // XC Func
-    auto functional = resolveFunctional(_act[0]->getSettings().dft.functional);
+    auto functional = _act[0]->getSettings().customFunc.basicFunctionals.size()
+                          ? Functional(_act[0]->getSettings().customFunc)
+                          : resolveFunctional(_act[0]->getSettings().dft.functional);
     std::shared_ptr<FuncPotential<SCFMode>> Vxc(new FuncPotential<SCFMode>(
         _act[0], _act[0]->template getElectronicStructure<SCFMode>()->getDensityMatrixController(),
         _act[0]->getGridController(), functional));

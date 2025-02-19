@@ -30,6 +30,7 @@
 /* Include Std and External Headers */
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
+// #include <pybind11/iostream.h>  // Include to allow ostream redirect
 
 namespace py = pybind11;
 using namespace Serenity;
@@ -109,7 +110,11 @@ void export_SystemController(py::module& spy) {
       .def(py::init(&createSystemControllerPtr1), "@brief The basic constructor for a system\n"
                                                   "\n"
                                                   "@param libserenipy.Settings The Settings for this System.")
-      .def(py::init<std::shared_ptr<Geometry>, Settings>())
+      .def(py::init<std::shared_ptr<Geometry>, Settings>()
+           // ,
+           //               py::call_guard<py::scoped_ostream_redirect,
+           //  py::scoped_estream_redirect>()
+           )
       .def("get", &getSptr)
       .def("guess", &guess)
       .def("getEnergy", &getEnergy1,

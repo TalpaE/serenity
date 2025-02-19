@@ -19,13 +19,12 @@
  */
 
 /* Include Serenity Internal Headers */
+#include "tasks/FiniteFieldTask.h"
 #include "settings/Settings.h"
 #include "system/SystemController.h"
-#include "testsupply/SystemController__TEST_SUPPLY.h"
-// Tasks
-#include "tasks/FiniteFieldTask.h"
 #include "tasks/LRSCFTask.h"
 #include "tasks/ScfTask.h"
+#include "testsupply/SystemController__TEST_SUPPLY.h"
 /* Include Std and External Headers */
 #include <gtest/gtest.h>
 

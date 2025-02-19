@@ -26,7 +26,7 @@
 #include "dft/dispersionCorrection/DispersionCorrectionCalculator.h"
 #include "energies/EnergyContributions.h"
 #include "geometry/MolecularSurfaceController.h"
-#include "grid/GridControllerFactory.h"
+#include "grid/AtomCenteredGridControllerFactory.h"
 #include "io/FormattedOutput.h"
 #include "io/FormattedOutputStream.h"
 #include "misc/WarningTracker.h"
@@ -108,9 +108,10 @@ void FDETask<SCFMode>::run() {
     // supersystem grid
     Options::GRID_PURPOSES gridacc =
         (settings.smallSupersystemGrid) ? Options::GRID_PURPOSES::SMALL : Options::GRID_PURPOSES::DEFAULT;
-    _supersystemgrid = GridControllerFactory::produce(superSystemGeometry, _activeSystem->getSettings().grid, gridacc);
+    _supersystemgrid =
+        AtomCenteredGridControllerFactory::produce(superSystemGeometry, _activeSystem->getSettings().grid, gridacc);
   }
-  if (settings.initializeSuperMolecularSurface && settings.embedding.pcm.use) {
+  if (settings.initializeSuperMolecularSurface && settings.embedding.pcm.use && !settings.embedding.pcm.loadedPCM) {
     // geometry of the entire system
     auto superSystemGeometry = std::make_shared<Geometry>(superSystemAtomsCavity);
     superSystemGeometry->deleteIdenticalAtoms();
@@ -119,6 +120,14 @@ void FDETask<SCFMode>::run() {
     for (auto sys : _environmentSystems)
       sys->setMolecularSurface(molecularSurface, MOLECULAR_SURFACE_TYPES::FDE);
   }
+  else if (settings.embedding.pcm.use && settings.embedding.pcm.loadedPCM) {
+    auto superSystemGeometry = std::make_shared<Geometry>(superSystemAtomsCavity);
+    superSystemGeometry->deleteIdenticalAtoms();
+    auto molecularSurface = _activeSystem->getMolecularSurface(MOLECULAR_SURFACE_TYPES::FDE);
+    for (auto sys : _environmentSystems)
+      sys->setMolecularSurface(molecularSurface, MOLECULAR_SURFACE_TYPES::FDE);
+  }
+
   // Set the grid controller to the supersystem grid if "exact" methods are used.
   if (settings.embedding.embeddingMode != Options::KIN_EMBEDDING_MODES::NADD_FUNC) {
     _activeSystem->setGridController(_supersystemgrid);
@@ -362,7 +371,8 @@ void FDETask<SCFMode>::run() {
     // supersystem grid
     Options::GRID_PURPOSES finalGridacc =
         (settings.smallSupersystemGrid) ? Options::GRID_PURPOSES::SMALL : Options::GRID_PURPOSES::DEFAULT;
-    _finalGrid = GridControllerFactory::produce(finalGridGeometry, _activeSystem->getSettings().grid, finalGridacc);
+    _finalGrid =
+        AtomCenteredGridControllerFactory::produce(finalGridGeometry, _activeSystem->getSettings().grid, finalGridacc);
   }
 
   if (settings.calculateSolvationEnergy) {
@@ -376,13 +386,18 @@ void FDETask<SCFMode>::run() {
     eCont->addOrReplaceComponent(ENERGY_CONTRIBUTIONS::FDE_SOLV_SCALED_NUCLEI_ENV_NUCLEI_COULOMB, 0.5 * actNucEnvNuc);
   }
   if (settings.gridCutOff > 0.0 and settings.finalGrid) {
-    auto naddXCfunc = resolveFunctional(settings.embedding.naddXCFunc);
+    auto naddXCfunc = settings.embedding.customNaddXCFunc.basicFunctionals.size()
+                          ? Functional(settings.embedding.customNaddXCFunc)
+                          : resolveFunctional(settings.embedding.naddXCFunc);
     auto naddXCPot = std::make_shared<NAddFuncPotential<SCFMode>>(
         _activeSystem, _activeSystem->template getElectronicStructure<SCFMode>()->getDensityMatrixController(),
         envDensities, _finalGrid, naddXCfunc, std::make_pair(true, eConts), true, true);
     auto kin = std::make_shared<NAddFuncPotential<SCFMode>>(
-        _activeSystem, _activeSystem->template getElectronicStructure<SCFMode>()->getDensityMatrixController(), envDensities,
-        _finalGrid, resolveFunctional(settings.embedding.naddKinFunc), std::make_pair(false, eConts), true, true);
+        _activeSystem, _activeSystem->template getElectronicStructure<SCFMode>()->getDensityMatrixController(),
+        envDensities, _finalGrid,
+        settings.embedding.customNaddKinFunc.basicFunctionals.size() ? Functional(settings.embedding.customNaddKinFunc)
+                                                                     : resolveFunctional(settings.embedding.naddKinFunc),
+        std::make_pair(false, eConts), true, true);
     const auto& P =
         _activeSystem->template getElectronicStructure<SCFMode>()->getDensityMatrixController()->getDensityMatrix();
     double eNaddKin = kin->getEnergy(P);
@@ -394,14 +409,18 @@ void FDETask<SCFMode>::run() {
   if (settings.calculateSolvationEnergy) {
     if (!_finalGrid)
       _finalGrid = _supersystemgrid;
-    auto naddXCfunc = resolveFunctional(settings.embedding.naddXCFunc);
+    auto naddXCfunc = settings.embedding.customNaddXCFunc.basicFunctionals.size()
+                          ? Functional(settings.embedding.customNaddXCFunc)
+                          : resolveFunctional(settings.embedding.naddXCFunc);
     auto naddXCPot = std::make_shared<NAddFuncPotential<SCFMode>>(
         _activeSystem, _activeSystem->template getElectronicStructure<SCFMode>()->getDensityMatrixController(),
         envDensities, _finalGrid, naddXCfunc, std::make_pair(true, eConts), true, true, settings.calculateSolvationEnergy);
     auto kin = std::make_shared<NAddFuncPotential<SCFMode>>(
         _activeSystem, _activeSystem->template getElectronicStructure<SCFMode>()->getDensityMatrixController(),
-        envDensities, _finalGrid, resolveFunctional(settings.embedding.naddKinFunc), std::make_pair(false, eConts),
-        true, true, settings.calculateSolvationEnergy);
+        envDensities, _finalGrid,
+        settings.embedding.customNaddKinFunc.basicFunctionals.size() ? Functional(settings.embedding.customNaddKinFunc)
+                                                                     : resolveFunctional(settings.embedding.naddKinFunc),
+        std::make_pair(false, eConts), true, true, settings.calculateSolvationEnergy);
 
     const auto& P =
         _activeSystem->template getElectronicStructure<SCFMode>()->getDensityMatrixController()->getDensityMatrix();
@@ -460,8 +479,12 @@ void FDETask<SCFMode>::run() {
 template<Options::SCF_MODES SCFMode>
 void FDETask<SCFMode>::calculateMP2CorrelationContribution(std::shared_ptr<PotentialBundle<SCFMode>> fdePot) {
   auto eCont = _activeSystem->getElectronicStructure<SCFMode>()->getEnergyComponentController();
-  auto functional = resolveFunctional(_activeSystem->getSettings().dft.functional);
-  auto naddXCFunctional = resolveFunctional(settings.embedding.naddXCFunc);
+  auto functional = _activeSystem->getSettings().customFunc.basicFunctionals.size()
+                        ? Functional(_activeSystem->getSettings().customFunc)
+                        : resolveFunctional(_activeSystem->getSettings().dft.functional);
+  auto naddXCFunctional = settings.embedding.customNaddXCFunc.basicFunctionals.size()
+                              ? Functional(settings.embedding.customNaddXCFunc)
+                              : resolveFunctional(settings.embedding.naddXCFunc);
   double MP2Correlation = 0.0;
   double mp2Interaction = 0.0;
   if (settings.calculateMP2Energy) {
@@ -533,7 +556,9 @@ void FDETask<SCFMode>::calculateMP2CorrelationContribution(std::shared_ptr<Poten
       };
       LocalMP2InteractionCalculator locMP2Inter(_activeSystem, _environmentSystems, settings.lcSettings, settings.maxCycles,
                                                 settings.maxResidual, settings.embedding.fullMP2Coupling);
-      auto envXCFunctional = resolveFunctional(_environmentSystems[0]->getSettings().dft.functional);
+      auto envXCFunctional = _environmentSystems[0]->getSettings().customFunc.basicFunctionals.size()
+                                 ? Functional(_environmentSystems[0]->getSettings().customFunc)
+                                 : resolveFunctional(_environmentSystems[0]->getSettings().dft.functional);
       bool envIsDFT = _environmentSystems[0]->getSettings().method == Options::ELECTRONIC_STRUCTURE_THEORIES::DFT;
       if (settings.calculateEnvironmentEnergy && envXCFunctional.isDoubleHybrid() && envIsDFT) {
         double envEnergy = eCont->getEnergyComponent(ENERGY_CONTRIBUTIONS::FDE_FROZEN_SUBSYSTEM_ENERGIES);

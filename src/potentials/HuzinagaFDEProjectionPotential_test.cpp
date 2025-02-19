@@ -20,7 +20,6 @@
 /* Include Serenity Internal Headers */
 #include "potentials/HuzinagaFDEProjectionPotential.h"
 #include "geometry/Geometry.h"
-#include "grid/GridControllerFactory.h"
 #include "potentials/NAddFuncPotential.h"
 #include "settings/EmbeddingSettings.h"
 #include "settings/Settings.h"

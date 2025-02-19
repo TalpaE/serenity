@@ -85,7 +85,9 @@ HuzinagaFDEProjectionPotential<SCFMode>::HuzinagaFDEProjectionPotential(
     // Build non-additive kinetic energy potential for not projected systems
     _naddKinPot = std::make_shared<NAddFuncPotential<SCFMode>>(
         activeSystem, activeSystem->template getElectronicStructure<SCFMode>()->getDensityMatrixController(),
-        _notProjectedEnvDensities, supersystemgrid, resolveFunctional(settings.longRangeNaddKinFunc),
+        _notProjectedEnvDensities, supersystemgrid,
+        settings.customLongRangeNaddKinFunc.basicFunctionals.size() ? Functional(settings.customLongRangeNaddKinFunc)
+                                                                    : resolveFunctional(settings.longRangeNaddKinFunc),
         std::make_pair(false, (gridCutOff < 0) ? allEConts : std::vector<std::shared_ptr<EnergyComponentController>>(0)),
         (gridCutOff < 0.0) ? true : false);
   }

@@ -96,41 +96,37 @@ class Point : public std::array<double, 3> {
    * @param   rhs
    * @returns the shifted point
    */
-  Point& operator+=(const Point& rhs) {
+  void operator+=(const Point& rhs) {
     this->at(0) += rhs[0];
     this->at(1) += rhs[1];
     this->at(2) += rhs[2];
-    return *this;
   }
   /**
    * @param   rhs
    * @returns the shifted point
    */
-  Point& operator-=(const Point& rhs) {
+  void operator-=(const Point& rhs) {
     this->at(0) -= rhs[0];
     this->at(1) -= rhs[1];
     this->at(2) -= rhs[2];
-    return *this;
   }
   /**
    * @param   factor
    * @returns the shifted point
    */
-  Point& operator*=(const double factor) {
+  void operator*=(const double factor) {
     this->at(0) *= factor;
     this->at(1) *= factor;
     this->at(2) *= factor;
-    return *this;
   }
   /**
    * @param   factor
    * @returns the shifted point
    */
-  Point& operator/=(const double factor) {
+  void operator/=(const double factor) {
     this->at(0) /= factor;
     this->at(1) /= factor;
     this->at(2) /= factor;
-    return *this;
   }
 
   /**

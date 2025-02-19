@@ -29,13 +29,13 @@
 #include "geometry/Atom.h"
 #include "geometry/Geometry.h"
 #include "integrals/OneElectronIntegralController.h" //Overlap integrals.
-#include "io/HDF5.h"                                 //Load from HDF5.
-#include "math/linearAlgebra/MatrixFunctions.h"      //Cholesky orthogonalization.
-#include "misc/SerenityError.h"                      //Errors.
-#include "misc/WarningTracker.h"                     //Warnings.
-#include "system/SystemController.h"                 //Access to system properties.
-/* Include Std and External Headers */
 #include "io/Eigen3HDF5.h"
+#include "io/HDF5.h"                            //Load from HDF5.
+#include "math/linearAlgebra/MatrixFunctions.h" //Cholesky orthogonalization.
+#include "misc/SerenityError.h"                 //Errors.
+#include "misc/WarningTracker.h"                //Warnings.
+#include "system/SystemController.h"            //Access to system properties.
+/* Include Std and External Headers */
 #include <algorithm> //Replace within a string.
 #include <fstream>   //input/output streams.
 

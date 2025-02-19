@@ -34,7 +34,7 @@ namespace Serenity {
 using namespace Serenity::Reflection;
 /* Forward declarations */
 class SystemController;
-template<Options::SCF_MODES T>
+template<Options::SCF_MODES SCFMode>
 class DirectOrbitalSelection;
 class DOSOrbitalGroup;
 

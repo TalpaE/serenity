@@ -28,8 +28,9 @@
 #include "geometry/Geometry.h"
 #include "io/CubeFileWriter.h"
 #include "io/Filesystem.h"
-#include "io/FormattedOutputStream.h" // formatted output
+#include "io/FormattedOutputStream.h"
 #include "io/HDF5.h"
+#include "parameters/Constants.h"
 #include "settings/Settings.h"
 #include "system/SystemController.h"
 #include "tasks/PlotTask.h"

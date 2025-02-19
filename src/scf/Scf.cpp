@@ -48,7 +48,8 @@ void Scf<SCFMode>::perform(const Settings& settings, std::shared_ptr<ElectronicS
   libint.keepEngines(LIBINT_OPERATOR::coulomb, 0, 3);
   libint.keepEngines(LIBINT_OPERATOR::coulomb, 0, 4);
   // Check if range seperate hybrid is used; then it is more efficient to keep those libint engines as well
-  auto functional = resolveFunctional(settings.dft.functional);
+  auto functional = settings.customFunc.basicFunctionals.size() ? Functional(settings.customFunc)
+                                                                : resolveFunctional(settings.dft.functional);
   if (functional.isRSHybrid()) {
     libint.keepEngines(LIBINT_OPERATOR::erf_coulomb, 0, 2);
     libint.keepEngines(LIBINT_OPERATOR::erf_coulomb, 0, 3);

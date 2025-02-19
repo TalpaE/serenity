@@ -58,7 +58,7 @@ class MO3CenterIntegralController {
  public:
   /**
    * @brief Constructor.
-   * @param auxilliaryBasisController The auxiliary basis controller.
+   * @param auxiliaryBasisController The auxiliary basis controller.
    * @param basisController The AO basis controller.
    * @param sparseMaps Sparse maps controller that holds all prescreening information.
    * @param paoController The PAO controller.
@@ -66,7 +66,7 @@ class MO3CenterIntegralController {
    * @param fBaseName The base name of the associated system.
    * @param id The id of the system.
    */
-  MO3CenterIntegralController(std::shared_ptr<BasisController> auxilliaryBasisController,
+  MO3CenterIntegralController(std::shared_ptr<BasisController> auxiliaryBasisController,
                               std::shared_ptr<BasisController> basisController,
                               const std::shared_ptr<SparseMapsController> sparseMaps,
                               std::shared_ptr<PAOController> paoController, std::shared_ptr<Eigen::MatrixXd> occupiedCoefficients,
@@ -280,7 +280,7 @@ class MO3CenterIntegralController {
 
   Eigen::SparseVector<int> getUnusedDomain(const Eigen::SparseVector<int>& kDomain);
   ///@brief Auxiliary basis controller.
-  std::shared_ptr<BasisController> _auxilliaryBasisController;
+  std::shared_ptr<BasisController> _auxiliaryBasisController;
   ///@brief Basis controller.
   std::shared_ptr<BasisController> _basisController;
   ///@brief Sparse maps controller.

@@ -19,16 +19,14 @@
  */
 
 /* Include Serenity Internal Headers */
-#include "settings/Settings.h"
-#include "system/SystemController.h"
-#include "testsupply/SystemController__TEST_SUPPLY.h"
-// ET Stuff
+#include "tasks/FDEETTask.h"
 #include "postHF/ET/FDEDiabController.h"
 #include "postHF/ET/FDEETCalculator.h"
 #include "postHF/ET/FDEETController.h"
-// Tasks
-#include "tasks/FDEETTask.h"
+#include "settings/Settings.h"
+#include "system/SystemController.h"
 #include "tasks/FreezeAndThawTask.h"
+#include "testsupply/SystemController__TEST_SUPPLY.h"
 /* Include Std and External Headers */
 #include <gtest/gtest.h>
 

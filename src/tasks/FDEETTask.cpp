@@ -47,7 +47,7 @@ void FDEETTask::run() {
     OutputControl::nOut << "are disjoint" << std::endl << std::endl;
   }
   // Sanity checks
-  if (resolveFunctional(settings.functional).isHybrid())
+  if (resolveFunctional(settings.functional).isHybrid() || Functional(settings.customFunc).isHybrid())
     throw SerenityError("Hybrid functionals cannot be used so far!");
   // check for active systems and states consisitency
   unsigned sum = 0;
@@ -204,6 +204,8 @@ std::shared_ptr<SystemController> FDEETTask::setUpSupersystem(std::vector<std::s
   superSysSettings.name = name.c_str();
   superSysSettings.path = "sys-";
   superSysSettings.dft.functional = settings.functional;
+  if (settings.customFunc.basicFunctionals.size())
+    superSysSettings.customFunc = settings.customFunc;
   auto supersystem = std::make_shared<SystemController>(std::make_shared<Geometry>(), superSysSettings);
   SystemAdditionTask<Options::SCF_MODES::UNRESTRICTED> additionTask(supersystem, coupleSystems);
   additionTask.settings.addOccupiedOrbitals = false;

@@ -37,13 +37,13 @@
 
 namespace Serenity {
 
-MO3CenterIntegralController::MO3CenterIntegralController(std::shared_ptr<BasisController> auxilliaryBasisController,
+MO3CenterIntegralController::MO3CenterIntegralController(std::shared_ptr<BasisController> auxiliaryBasisController,
                                                          std::shared_ptr<BasisController> basisController,
                                                          const std::shared_ptr<SparseMapsController> sparseMaps,
                                                          std::shared_ptr<PAOController> paoController,
                                                          std::shared_ptr<Eigen::MatrixXd> occupiedCoefficients,
                                                          std::string fBaseName, std::string id, bool triplesMode)
-  : _auxilliaryBasisController(auxilliaryBasisController),
+  : _auxiliaryBasisController(auxiliaryBasisController),
     _basisController(basisController),
     _sparseMaps(sparseMaps),
     _paoController(paoController),
@@ -148,7 +148,7 @@ Eigen::SparseVector<int> MO3CenterIntegralController::getUnusedDomain(const Eige
 }
 
 void MO3CenterIntegralController::loadIntegrals(MO3CENTER_INTS mo3CenterType, const Eigen::SparseVector<int>& kDomain) {
-  unsigned int nAuxFunc = _auxilliaryBasisController->getNBasisFunctions();
+  unsigned int nAuxFunc = _auxiliaryBasisController->getNBasisFunctions();
   if (!_integrals[mo3CenterType].first) {
     _integrals[mo3CenterType].first.reset(new MO3CenterIntegrals(nAuxFunc, Eigen::SparseMatrix<double>(0, 0)));
     _integrals[mo3CenterType].second = kDomain;
@@ -199,19 +199,19 @@ void MO3CenterIntegralController::calculateIntegrals(MO3CENTER_INTS mo3CenterTyp
   libint.initialize_plain(
       LIBINT_OPERATOR::coulomb, 3, std::numeric_limits<double>::epsilon(),
       std::max(paoCoefficients.lpNorm<Eigen::Infinity>(), aoCoefficients.lpNorm<Eigen::Infinity>()),
-      std::max(_auxilliaryBasisController->getMaxNumberOfPrimitives(), _basisController->getMaxNumberOfPrimitives()));
+      std::max(_auxiliaryBasisController->getMaxNumberOfPrimitives(), _basisController->getMaxNumberOfPrimitives()));
 
-  unsigned int m = _auxilliaryBasisController->getNBasisFunctions();
+  unsigned int m = _auxiliaryBasisController->getNBasisFunctions();
   // Resize the result matrices.
   auto& mo3CenterInts = *_integrals[mo3CenterType].first;
   if (mo3CenterInts.size() == 0) {
     mo3CenterInts = std::vector<Eigen::MatrixXd>(m, Eigen::MatrixXd(0, 0));
   }
 
-  auto auxShells_K = _auxilliaryBasisController->getBasis();
+  auto auxShells_K = _auxiliaryBasisController->getBasis();
   auto aoShells = _basisController->getBasis();
 
-  bool normAux = !(_auxilliaryBasisController->isAtomicCholesky());
+  bool normAux = !(_auxiliaryBasisController->isAtomicCholesky());
 
   // Construction of the projection matrices is not allowed within a parallel region.
   // Thus, we will ensure that they are available upon integral calculation.
@@ -308,7 +308,7 @@ void MO3CenterIntegralController::calculateIntegrals(MO3CENTER_INTS mo3CenterTyp
 
     unsigned int counter = 0;
     for (const auto& i_K : i_Ks) {
-      unsigned int extendedK = _auxilliaryBasisController->extendedIndex(indexK) + counter;
+      unsigned int extendedK = _auxiliaryBasisController->extendedIndex(indexK) + counter;
       transformCoefficients(mo3CenterType, mo3CenterInts[extendedK], c_K, pao_K, i_K);
       ++counter;
     } // for i_K
@@ -476,7 +476,7 @@ void MO3CenterIntegralController::printInfo(const SparseMap& kToRhoMap, const Sp
   std::string integralType = (type == MO3CENTER_INTS::kl_K)   ? "(kl|K)"
                              : (type == MO3CENTER_INTS::ab_K) ? "(ab|K)"
                                                               : "(ia|K)";
-  double memory = this->getMemoryRequirement(type, _sparseMaps, _auxilliaryBasisController, kDomain, _triplesMode) * 1e-9;
+  double memory = this->getMemoryRequirement(type, _sparseMaps, _auxiliaryBasisController, kDomain, _triplesMode) * 1e-9;
   OutputControl::vOut << std::string(40, '-') << std::setprecision(4) << std::endl;
   OutputControl::vOut << "         Sparse map densities " << integralType << std::endl;
   OutputControl::vOut << "            " << std::setw(12) << "AO-Indices" << std::setw(12) << "MO-Indices" << std::endl;
@@ -495,13 +495,13 @@ void MO3CenterIntegralController::printInfo(const SparseMap& kToRhoMap, const Sp
 }
 
 void MO3CenterIntegralController::removeIntegralsByDomain(const Eigen::SparseVector<int>& kDomain, MO3CENTER_INTS mo3CenterType) {
-  auto auxShells_K = _auxilliaryBasisController->getBasis();
+  auto auxShells_K = _auxiliaryBasisController->getBasis();
   if (_integrals[mo3CenterType].first) {
     for (Eigen::SparseVector<int>::InnerIterator itK(kDomain); itK; ++itK) {
       const unsigned int kShellIndex = itK.row();
       const auto& shellK = *auxShells_K[kShellIndex];
       const unsigned int nK = shellK.getNContracted();
-      unsigned int extendedK = _auxilliaryBasisController->extendedIndex(kShellIndex);
+      unsigned int extendedK = _auxiliaryBasisController->extendedIndex(kShellIndex);
       for (unsigned int k = 0; k < nK; ++k) {
         const unsigned int kFctIndex = extendedK + k;
         (*_integrals[mo3CenterType].first)[kFctIndex].resize(0, 0);

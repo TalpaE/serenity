@@ -118,7 +118,7 @@ class LocalizationTask : public Task {
   LocalizationTaskSettings settings;
 
  private:
-  template<Options::SCF_MODES T>
+  template<Options::SCF_MODES SCFMode>
   void runByLastSCFMode();
   /**
    * @brief Split valence and core orbitals.

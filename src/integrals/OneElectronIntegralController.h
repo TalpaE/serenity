@@ -47,7 +47,6 @@ class OneElectronIntegralController : public ObjectSensitiveClass<Basis> {
    * @brief Constructor
    * @param basisController   The reference basis.
    * @param geometry          The reference geometry, needed for the nuclei-electron attraction integrals.
-   * @param gaugeOrigin       Gauge origin for dipole integrals.
    */
   OneElectronIntegralController(std::shared_ptr<BasisController> basisController, std::shared_ptr<const Geometry> geometry);
 
@@ -203,6 +202,7 @@ class OneElectronIntegralController : public ObjectSensitiveClass<Basis> {
   std::unique_ptr<MatrixInBasis<RESTRICTED>> _nucIntegrals;
   std::unique_ptr<MatrixInBasis<RESTRICTED>> _ecpIntegrals;
 
+  // Dipole integrals, vector has 3 elements for x, y, z components
   std::unique_ptr<std::vector<MatrixInBasis<RESTRICTED>>> _diplen;
   std::unique_ptr<std::vector<MatrixInBasis<RESTRICTED>>> _dipvel;
   std::unique_ptr<std::vector<MatrixInBasis<RESTRICTED>>> _angmom;

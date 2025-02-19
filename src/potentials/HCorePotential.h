@@ -79,12 +79,15 @@ class HCorePotential : public Potential<SCFMode>, public ObjectSensitiveClass<Ba
 
   /**
    * @brief Calculates the energy weighted density matrix.
-   * @param systemController The system.
-   * @param orbitalSet The chosen orbitals.
+   *
+   * Energy weighted density matrix \f$ W_{\alpha\beta\sigma} = \sum_{\mu\nu} D_{\alpha\mu\sigma} F_{\mu\nu\sigma}
+   * D_{\nu\beta\sigma} = \sum_i^{occ} \epsilon_{i\sigma} c_{\alpha i\sigma} c_{\beta i\sigma} \f$, with the latter
+   * equality only holding for canonical orbitals. For the restricted case, it has an overall factor of 2, but since two
+   * factors of 2 are pulled into the density matrices, it becomes a factor of one half in front of the density matrix -
+   * fock matrix expression.
    * @return Returns the energy weighted density matrix.
    */
-  DensityMatrix<SCFMode> calcEnergyWeightedDensityMatrix(std::shared_ptr<SystemController> systemController,
-                                                         const std::shared_ptr<OrbitalController<SCFMode>>& orbitalSet);
+  DensityMatrix<SCFMode> calcEnergyWeightedDensityMatrix();
 
   /**
    * @brief Potential is linked to the basis it is defines in.
@@ -105,6 +108,8 @@ class HCorePotential : public Potential<SCFMode>, public ObjectSensitiveClass<Ba
   std::vector<std::pair<double, Point>> _extCharges;
   ///@brief Read external charges from file.
   static std::vector<std::pair<double, Point>> readExternalChargeFile(const std::string& filePath);
+  ///@brief Read external potential defined on a grid from file.
+  void importExternalGridPotential(std::string inputFile);
   ///@brief Getter for all charges (external and nuclei). Charge ordering: First all atoms followed by all external
   /// charges.
   std::vector<std::pair<double, Point>> getAllCharges();

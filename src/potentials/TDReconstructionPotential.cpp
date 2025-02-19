@@ -33,7 +33,7 @@
 #include "data/grid/ScalarOperatorToMatrixAdder.h"
 #include "data/matrices/DensityMatrixController.h"
 #include "dft/functionals/CompositeFunctionals.h"
-#include "dft/functionals/wrappers/XCFun.h"
+#include "dft/functionals/FunctionalLibrary.h"
 #include "energies/EnergyContributions.h"
 #include "geometry/MolecularSurfaceController.h" //Enums
 #include "integrals/OneElectronIntegralController.h"
@@ -127,7 +127,9 @@ void TDReconstructionPotential<SCFMode>::calculatePotential() {
   /*
    * Hybrid functional?
    */
-  auto functional = resolveFunctional(superSystem->getSettings().dft.functional);
+  auto functional = superSystem->getSettings().customFunc.basicFunctionals.size()
+                        ? Functional(superSystem->getSettings().customFunc)
+                        : resolveFunctional(superSystem->getSettings().dft.functional);
   double exc = _carterCycles != 0 ? -1.0 : functional.isHybrid() ? functional.getHfExchangeRatio() : -1.0;
 
   /*
@@ -282,9 +284,9 @@ void TDReconstructionPotential<SCFMode>::calculatePotential() {
       auto densOnGridController = std::make_shared<DensityMatrixDensityOnGridController<SCFMode>>(
           supDensOnGridCalc, superSystem->template getElectronicStructure<SCFMode>()->getDensityMatrixController());
 
-      XCFun<SCFMode> xcFun(128);
+      FunctionalLibrary<SCFMode> flib(128);
       MatrixInBasis<SCFMode> tmp(this->_basis);
-      auto funcData = xcFun.calcData(FUNCTIONAL_DATA_TYPE::GRADIENTS, functional, densOnGridController);
+      auto funcData = flib.calcData(FUNCTIONAL_DATA_TYPE::GRADIENTS, functional, densOnGridController);
 
       if (functional.getFunctionalClass() == CompositeFunctionals::CLASSES::LDA) {
         scalarOpToMat.addScalarOperatorToMatrix(tmp, *funcData.dFdRho);
@@ -324,8 +326,7 @@ void TDReconstructionPotential<SCFMode>::calculatePotential() {
           Options::GRID_PURPOSES::DEFAULT);
     }
     else {
-      std::cout << "ERROR: None existing electronicStructureTheory requested." << std::endl;
-      assert(false);
+      throw SerenityError("Nonexistent electronicStructureTheory requested. Options are HF and DFT.");
     }
 
     auto envSystemZero = _envSystems[0].lock();

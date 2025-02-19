@@ -33,16 +33,16 @@ namespace Serenity {
 /* Forward declarations */
 class AtomCenteredBasisController;
 class BasisController;
-template<Options::SCF_MODES T>
+template<Options::SCF_MODES SCFMode>
 class ElectronicStructure;
 class Geometry;
 class GridController;
 class OneElectronIntegralController;
-template<Options::SCF_MODES T>
+template<Options::SCF_MODES SCFMode>
 class OrbitalController;
 class SystemController;
 enum class MOLECULAR_SURFACE_TYPES;
-template<Options::SCF_MODES T>
+template<Options::SCF_MODES SCFMode>
 class ElectrostaticPotentialOnGridController;
 class MolecularSurfaceController;
 /**

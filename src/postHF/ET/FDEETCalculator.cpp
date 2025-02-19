@@ -27,10 +27,8 @@
 #include "io/CubeFileWriter.h"
 #include "io/Filesystem.h"
 #include "io/FormattedOutputStream.h"
-#include "io/FormattedOutputStream.h" // formatted output
 #include "io/HDF5.h"
 #include "parameters/Constants.h"
-#include "potentials/CoulombPotential.h"
 #include "potentials/ERIPotential.h"
 #include "potentials/FuncPotential.h"
 #include "potentials/HCorePotential.h"
@@ -362,7 +360,9 @@ double FDEETCalculator::calcDFTEnergy(std::shared_ptr<DensityMatrixController<Op
   // Hcore potential
   auto hcore = std::make_shared<HCorePotential<Options::SCF_MODES::UNRESTRICTED>>(superSystem);
   // XC potential
-  auto functional = resolveFunctional(superSystem->getSettings().dft.functional);
+  auto functional = superSystem->getSettings().customFunc.basicFunctionals.size()
+                        ? Functional(superSystem->getSettings().customFunc)
+                        : resolveFunctional(superSystem->getSettings().dft.functional);
   auto Vxc = std::make_shared<FuncPotential<UNRESTRICTED>>(superSystem->getSharedPtr(), dMatC,
                                                            superSystem->getGridController(), functional);
   // J potential

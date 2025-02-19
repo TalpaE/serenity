@@ -23,6 +23,7 @@
 /* Include Serenity Internal Headers */
 #include "settings/DFTOptions.h"
 #include "settings/Reflection.h"
+#include "settings/Settings.h"
 #include "tasks/Task.h"
 
 namespace Serenity {
@@ -49,6 +50,8 @@ struct FDEETTaskSettings {
   REFLECTABLE((CompositeFunctionals::XCFUNCTIONALS)functional, (std::vector<std::vector<unsigned int>>)couple,
               (std::vector<unsigned int>)states, (std::vector<unsigned int>)population, (bool)spindensity, (bool)spinpopulation,
               (std::vector<unsigned int>)disjoint, (double)invThreshold, (bool)diskMode, (bool)printContributions)
+ public:
+  CUSTOMFUNCTIONAL customFunc;
 };
 
 /**
@@ -91,6 +94,23 @@ class FDEETTask : public Task {
   void run();
 
   /**
+   * @brief Parse the settings to the task settings.
+   * @param c The task settings.
+   * @param v The visitor which contains the settings strings.
+   * @param blockname A potential block name.
+   */
+  void visit(FDEETTaskSettings& c, set_visitor v, std::string blockname) {
+    if (!blockname.compare("")) {
+      visit_each(c, v);
+      return;
+    }
+    if (c.customFunc.visitAsBlockSettings(v, blockname)) {
+      return;
+    }
+    throw SerenityError((std::string) "Unknown block in FDEETTaskSettings: " + blockname);
+  }
+
+  /**
    * @brief The settings/keywords for the FDEETTask: \n
    *        @param couple Specifies which diabatic states are be coupled. E.g. couple{12} should be understood as
    *                    "couple diabatic states 1 and 2", whereas couple{12 13} means "do two separate runs: first
@@ -111,6 +131,7 @@ class FDEETTask : public Task {
    *        @param disjoint Specifies which subsystems are joined in case of using the disjoint approximation. E.g.
    * disjoint{1 2} joins systems 1 and 2 in the list of systems for each state. See Ref.~[2] for more details about the
    * disjoint approximation
+   *        @param customFunc Allows to define a custom functional for this task.
    *
    */
   FDEETTaskSettings settings;

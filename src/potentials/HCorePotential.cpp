@@ -26,10 +26,15 @@
 #include "basis/BasisController.h"
 #include "data/ElectronicStructure.h"
 #include "data/OrbitalController.h"
+#include "data/grid/BasisFunctionOnGridController.h"
+#include "data/grid/BasisFunctionOnGridControllerFactory.h"
+#include "data/grid/GridPotential.h"
+#include "data/grid/ScalarOperatorToMatrixAdder.h"
 #include "geometry/Atom.h"
 #include "geometry/efields/EFieldPlates.h"
 #include "geometry/gradients/CoreCoreRepulsionDerivative.h"
 #include "integrals/OneElectronIntegralController.h"
+#include "integrals/OneElectronIntegralDerivativeCalculator.h"
 #include "integrals/wrappers/Libecpint.h"
 #include "integrals/wrappers/Libint.h"
 #include "io/FormattedOutputStream.h" //Filtered output.
@@ -37,6 +42,11 @@
 #include "parameters/Constants.h"
 #include "settings/Settings.h"
 #include "system/SystemController.h"
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace Serenity {
 
@@ -94,6 +104,9 @@ FockMatrix<SCFMode>& HCorePotential<SCFMode>::getMatrix() {
         pot_spin += ext;
       };
     }
+    auto extGridPot = _system.lock()->getSettings().externalGridPotential;
+    if (!extGridPot.empty())
+      this->importExternalGridPotential(extGridPot);
   }
   Timings::timeTaken("Active System -     1e-Int Pot.");
   return *_potential;
@@ -143,142 +156,33 @@ Eigen::MatrixXd HCorePotential<SCFMode>::getGeomGradients() {
    * dV/dR = \sum_{\alpha \beta} D_{\alpha \beta} dh_{\alpha\beta}/dR + dV_{nn}/dR - \sum_{\alpha\beta} W_{\alpha\beta}
    * dS_{\alpha\beta}/dR
    *       + electric-field
-   *
-   * W: Energy weighted density matrix W_{\alpha\beta} = \sum_i^{occ} \epsilon_i c_{\alpha i} c_{\beta i}
    */
-  // ToDo: Ask electronic structure for new fock matrix?! orbital set could be localized and non-canonical
-  const auto& orbitalSet = system->template getActiveOrbitalController<SCFMode>();
   const unsigned int nAtoms = system->getNAtoms();
-  const auto allCharges = this->getAllCharges();
+  const std::vector<std::pair<double, Point>> allCharges = this->getAllCharges();
   Eigen::MatrixXd gradientContr = Eigen::MatrixXd::Zero(allCharges.size(), 3);
 
-  DensityMatrix<SCFMode> matrix(system->template getElectronicStructure<SCFMode>()->getDensityMatrix());
-  matrix = calcEnergyWeightedDensityMatrix(system, orbitalSet);
-  for_spin(matrix) {
-    matrix_spin *= -1.0;
-  };
-  auto basisIndicesRed = system->getAtomCenteredBasisController()->getBasisIndicesRed();
+  DensityMatrix<SCFMode> matrix = calcEnergyWeightedDensityMatrix();
+  OneElectronIntegralDerivativeCalculator intDerivCalculator(system->getAtomCenteredBasisController(),
+                                                             system->getGeometry(), allCharges);
+  /**
+   * Term
+   * g += - \sum_{\alpha\beta} W_{\alpha\beta} dS_{\alpha\beta}/dR
+   */
+  gradientContr.topRows(nAtoms) += intDerivCalculator.getOverlapDerivative(matrix.total());
   auto mapping = system->getAtomCenteredBasisController()->getAtomIndicesOfBasisShells();
   auto& basis = system->getAtomCenteredBasisController()->getBasis();
   Libint& libint = Libint::getInstance();
-  libint.initialize(LIBINT_OPERATOR::overlap, 1, 2);
-#pragma omp parallel
-  {
-    /**
-     * Term
-     * g += - \sum_{\alpha\beta} W_{\alpha\beta} dS_{\alpha\beta}/dR
-     */
-    Eigen::MatrixXd intDerivs;
-    bool significant;
-    Eigen::MatrixXd gradientContrPriv = Eigen::MatrixXd::Zero(allCharges.size(), 3);
-#pragma omp for schedule(static, 1)
-    for (unsigned int i = 0; i < basis.size(); ++i) {
-      unsigned int offI = system->getBasisController()->extendedIndex(i);
-      const unsigned int nI = basis[i]->getNContracted();
-      for (unsigned int j = 0; j <= i; ++j) {
-        unsigned int offJ = system->getBasisController()->extendedIndex(j);
-        const unsigned int nJ = basis[j]->getNContracted();
-        significant = libint.compute(LIBINT_OPERATOR::overlap, 1, *basis[i], *basis[j], intDerivs);
-        if (significant) {
-          double perm = (i == j ? 1.0 : 2.0);
-          for (unsigned int iCol = 0; iCol < 2; ++iCol) {
-            unsigned iAtom = iCol ? mapping[j] : mapping[i];
-            for (unsigned int iDirection = 0; iDirection < 3; ++iDirection) {
-              Eigen::Map<Eigen::MatrixXd> tmp(intDerivs.col(iCol * 3 + iDirection).data(), nJ, nI);
-              for_spin(matrix) {
-                gradientContrPriv(iAtom, iDirection) += perm * tmp.cwiseProduct(matrix_spin.block(offJ, offI, nJ, nI)).sum();
-              };
-            }
-          }
-        }
-      }
-    }
-
-#pragma omp critical
-    { gradientContr += gradientContrPriv; }
-  } /* END OpenMP parallel */
 
   DensityMatrix<RESTRICTED> densMatrix(system->template getElectronicStructure<SCFMode>()->getDensityMatrix().total());
 
-  libint.initialize(LIBINT_OPERATOR::nuclear, 1, 2, allCharges);
-#pragma omp parallel
-  {
-    Eigen::MatrixXd intDerivs;
-    bool significant;
-    Eigen::MatrixXd gradientContrPriv = Eigen::MatrixXd::Zero(allCharges.size(), 3);
-    /**
-     * Part of g += \sum_{\alpha \beta} D_{\alpha \beta} dh_{\alpha\beta}/dR for nuclei-electron interaction.
-     * If external charges are present, their operator contribution will contribute here.
-     *
-     * d/dR_I sum_mu,nu (<mu|sum_I Z_I / |R_I - r| | nu> D_mu,nu)
-     */
-#pragma omp for schedule(static, 1)
-    for (unsigned int i = 0; i < basis.size(); ++i) {
-      unsigned int offI = system->getBasisController()->extendedIndex(i);
-      const unsigned int nI = basis[i]->getNContracted();
-      for (unsigned int j = 0; j <= i; ++j) {
-        unsigned int offJ = system->getBasisController()->extendedIndex(j);
-        const unsigned int nJ = basis[j]->getNContracted();
-        significant = libint.compute(LIBINT_OPERATOR::nuclear, 1, *basis[i], *basis[j], intDerivs);
-        if (significant) {
-          double perm = (i == j ? 1.0 : 2.0);
-          // Basis function derivative
-          // loop over integral centers for atom pairs, where iCol < 2
-          for (unsigned int iCol = 0; iCol < 2; ++iCol) {
-            unsigned iAtom = iCol ? mapping[j] : mapping[i];
-            for (unsigned int iDirection = 0; iDirection < 3; ++iDirection) {
-              Eigen::Map<Eigen::MatrixXd> tmp(intDerivs.col(iCol * 3 + iDirection).data(), nJ, nI);
-              gradientContrPriv(iAtom, iDirection) += perm * tmp.cwiseProduct(densMatrix.block(offJ, offI, nJ, nI)).sum();
-            }
-          }
-          // Operator derivative.
-          // loop over integral centers for atom pairs, where iCol > 2
-          for (unsigned int iCol = 2; iCol < allCharges.size() + 2; ++iCol) {
-            unsigned iAtom = iCol - 2;
-            for (unsigned int iDirection = 0; iDirection < 3; ++iDirection) {
-              Eigen::Map<Eigen::MatrixXd> tmp(intDerivs.col(iCol * 3 + iDirection).data(), nJ, nI);
-              gradientContrPriv(iAtom, iDirection) += perm * tmp.cwiseProduct(densMatrix.block(offJ, offI, nJ, nI)).sum();
-            }
-          }
-        }
-      }
-    }
-
-#pragma omp critical
-    { gradientContr += gradientContrPriv; }
-  } /* END OpenMP parallel */
-
-  libint.initialize(LIBINT_OPERATOR::kinetic, 1, 2);
-#pragma omp parallel
-  {
-    Eigen::MatrixXd intDerivs;
-    bool significant;
-    Eigen::MatrixXd gradientContrPriv = Eigen::MatrixXd::Zero(nAtoms, 3);
-#pragma omp for schedule(dynamic)
-    for (unsigned int i = 0; i < basis.size(); ++i) {
-      unsigned int offI = system->getBasisController()->extendedIndex(i);
-      const unsigned int nI = basis[i]->getNContracted();
-      for (unsigned int j = 0; j <= i; ++j) {
-        unsigned int offJ = system->getBasisController()->extendedIndex(j);
-        const unsigned int nJ = basis[j]->getNContracted();
-        significant = libint.compute(LIBINT_OPERATOR::kinetic, 1, *basis[i], *basis[j], intDerivs);
-        if (significant) {
-          double perm = (i == j ? 1.0 : 2.0);
-          for (unsigned int iCol = 0; iCol < 2; ++iCol) {
-            unsigned iAtom = iCol ? mapping[j] : mapping[i];
-            for (unsigned int iDirection = 0; iDirection < 3; ++iDirection) {
-              Eigen::Map<Eigen::MatrixXd> tmp(intDerivs.col(iCol * 3 + iDirection).data(), nJ, nI);
-              gradientContrPriv(iAtom, iDirection) += perm * tmp.cwiseProduct(densMatrix.block(offJ, offI, nJ, nI)).sum();
-            }
-          }
-        }
-      }
-    }
-
-    // No contribution for external point charges.
-#pragma omp critical
-    { gradientContr.block(0, 0, nAtoms, 3) += gradientContrPriv; }
-  } /* END OpenMP parallel */
+  /**
+   * Term
+   *  g += \sum_{\alpha \beta} D_{\alpha \beta} dh_{\alpha\beta}/dR
+   * If external charges are present, their operator contribution will contribute here.
+   *
+   * d/dR_I \sum_{\mu\nu} (<\mu|sum_I Z_I / |R_I - r| | \nu> D_{\mu\nu})
+   */
+  gradientContr += intDerivCalculator.getNucKinDerivative(densMatrix);
 
   /* if analytical external electric field is present */
   if (ef.use && ef.analytical) {
@@ -353,26 +257,14 @@ Eigen::MatrixXd HCorePotential<SCFMode>::getGeomGradients() {
 }
 
 template<Options::SCF_MODES SCFMode>
-DensityMatrix<SCFMode>
-HCorePotential<SCFMode>::calcEnergyWeightedDensityMatrix(std::shared_ptr<SystemController> systemController,
-                                                         const std::shared_ptr<OrbitalController<SCFMode>>& orbitalSet) {
-  DensityMatrix<SCFMode> energyWeightedDensityMatrix(orbitalSet->getBasisController());
-  const unsigned int nBasisFunctions = systemController->getBasisController()->getNBasisFunctions();
-  const auto& nElectrons = systemController->getNElectrons<SCFMode>();
-  auto eigenvalues(std::move(orbitalSet->getEigenvalues()));
-  auto coefficients(std::move(orbitalSet->getCoefficients()));
-  const double occ = (SCFMode == Options::SCF_MODES::RESTRICTED) ? 2.0 : 1.0;
-  for_spin(nElectrons, energyWeightedDensityMatrix, eigenvalues, coefficients) {
-    for (unsigned int i = 0; i < nBasisFunctions; ++i) {
-      for (unsigned int j = 0; j < i; ++j) {
-        // TODO this is wrong for a non-Aufbau occupation
-        for (unsigned int k = 0; k < nElectrons_spin / occ; ++k) {
-          energyWeightedDensityMatrix_spin(i, j) +=
-              occ * eigenvalues_spin[k] * coefficients_spin(i, k) * coefficients_spin(j, k);
-        }
-        energyWeightedDensityMatrix_spin(j, i) = energyWeightedDensityMatrix_spin(i, j);
-      }
-    }
+DensityMatrix<SCFMode> HCorePotential<SCFMode>::calcEnergyWeightedDensityMatrix() {
+  auto systemController = _system.lock();
+  DensityMatrix<SCFMode> energyWeightedDensityMatrix(systemController->getBasisController());
+  const FockMatrix<SCFMode>& fockMatrix = systemController->template getElectronicStructure<SCFMode>()->getFockMatrix();
+  const DensityMatrix<SCFMode>& densMatrix = systemController->template getElectronicStructure<SCFMode>()->getDensityMatrix();
+  const double factor = (SCFMode == Options::SCF_MODES::RESTRICTED) ? 0.5 : 1.0;
+  for_spin(energyWeightedDensityMatrix, fockMatrix, densMatrix) {
+    energyWeightedDensityMatrix_spin -= factor * densMatrix_spin * fockMatrix_spin * densMatrix_spin;
   };
   return energyWeightedDensityMatrix;
 }
@@ -437,6 +329,51 @@ const Eigen::MatrixXd& HCorePotential<SCFMode>::getPointChargeGradients() {
     }
   }
   return *_pointChargeGradients;
+}
+
+template<Options::SCF_MODES SCFMode>
+void HCorePotential<SCFMode>::importExternalGridPotential(std::string inputFile) {
+  auto coords = std::make_unique<Eigen::Matrix3Xd>(3, 0);
+  auto weights = std::make_unique<Eigen::VectorXd>(0);
+  Eigen::VectorXd potentialvalues = Eigen::VectorXd(0);
+
+  std::string line;
+  std::fstream file(inputFile, std::ios::in);
+  if (file.is_open()) {
+    std::getline(file, line); // Skip first line
+    while (std::getline(file, line)) {
+      std::istringstream iss(line);
+      try {
+        coords->conservativeResize(3, coords->cols() + 1);
+        iss >> coords->col(coords->cols() - 1)[0];
+        iss >> coords->col(coords->cols() - 1)[1];
+        iss >> coords->col(coords->cols() - 1)[2];
+        weights->conservativeResize(weights->size() + 1);
+        iss >> (*weights)(weights->size() - 1);
+        potentialvalues.conservativeResize(potentialvalues.size() + 1);
+        iss >> potentialvalues(potentialvalues.size() - 1);
+      }
+      catch (...) {
+        throw SerenityError("Error: External potential on grid file not formatted as expected. The format must be:\n"
+                            "x-coord y-coord z-coord grid-weight potential-value\n"
+                            "All coordinates and the potential itself must be provided in atomic units " +
+                            inputFile);
+      }
+    }
+  }
+  auto grid = std::unique_ptr<Grid>(new Grid(std::move(coords), std::move(weights)));
+  auto gridController = std::make_shared<GridController>(std::move(grid));
+  auto gridPotentialPtr = std::make_shared<GridPotential<SCFMode>>(gridController);
+  auto& gridPotential = *gridPotentialPtr;
+  for_spin(gridPotential) {
+    gridPotential_spin = potentialvalues;
+  };
+  auto sys = _system.lock();
+  auto basisFunctionOnGridController =
+      BasisFunctionOnGridControllerFactory::produce(sys->getSettings(), sys->getBasisController(), gridController);
+  auto gridToMatrix = std::make_shared<ScalarOperatorToMatrixAdder<SCFMode>>(basisFunctionOnGridController,
+                                                                             sys->getSettings().grid.blockAveThreshold);
+  gridToMatrix->addScalarOperatorToMatrix(*_potential, gridPotential);
 }
 
 template class HCorePotential<Options::SCF_MODES::RESTRICTED>;

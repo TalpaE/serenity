@@ -90,7 +90,9 @@ void FiniteFieldTask::runImpl() {
     _embeddingScheme = Options::EMBEDDING_SCHEME::FDE;
   }
   bool rsHybrid = false;
-  auto func = resolveFunctional(_activeSystem->getSettings().dft.functional);
+  auto func = _activeSystem->getSettings().customFunc.basicFunctionals.size()
+                  ? Functional(_activeSystem->getSettings().customFunc)
+                  : resolveFunctional(_activeSystem->getSettings().dft.functional);
   if (func.isRSHybrid() && _activeSystem->getSettings().method == Options::ELECTRONIC_STRUCTURE_THEORIES::DFT) {
     rsHybrid = true;
   }
@@ -312,10 +314,12 @@ Eigen::MatrixXd FiniteFieldTask::perturbedSCF(unsigned direction, double fStreng
 void FiniteFieldTask::visit(FiniteFieldTaskSettings& c, set_visitor v, std::string blockname) {
   if (!blockname.compare("")) {
     visit_each(c, v);
+    return;
   }
-  else if (!c.embedding.visitSettings(v, blockname)) {
-    throw SerenityError((std::string) "Unknown block in FiniteFieldTaskSettings: " + blockname);
-  }
+  // If reached, the blockname is unknown.
+  if (c.embedding.visitAsBlockSettings(v, blockname))
+    return;
+  throw SerenityError((std::string) "Unknown block in FiniteFieldTaskSettings: " + blockname);
 }
 
 Eigen::Matrix3d FiniteFieldTask::getPolarizability() {

@@ -119,6 +119,7 @@ void ConvergenceController<SCFMode>::printCycleInfo() {
         "    Cycle %4s E/a.u. %7s abs(dE)/a.u. %3s rmsd(P)/a.u. %5s [F,P]/a.u. %4s time/min   Mode\n", "", "", "", "", "");
     OutputControl::m.printf("    %4d %16.10f %16.2e %16.2e %16.2e %6i:%02u \n", _cycle, energy, inf, inf,
                             _diisConvMeasure, 0, 0);
+    OutputControl::mOut.flush();
   }
   else {
     timespec now;
@@ -127,6 +128,7 @@ void ConvergenceController<SCFMode>::printCycleInfo() {
     int ms = (int)(sec * 1000) - 1000 * (int)sec;
     std::printf("    %4d %16.10f %16.2e %16.2e %16.2e %6i:%02i:%03i    %3s\n", _cycle, energy, deltaE_abs,
                 _rmsdOfDensity, _diisConvMeasure, (int)(sec / 60), (int)(sec) % 60, ms, _mode.c_str());
+    OutputControl::mOut.flush();
   }
 }
 

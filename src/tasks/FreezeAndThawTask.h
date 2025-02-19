@@ -54,7 +54,8 @@ struct FreezeAndThawTaskSettings {
       calculateUnrelaxedMP2Density({}),
       mp2Type(Options::MP2_TYPES::LOCAL),
       keepCoulombCache(false),
-      finalEnergyEvaluation(true) {
+      finalEnergyEvaluation(true),
+      printResults(true) {
     embedding.naddXCFunc = CompositeFunctionals::XCFUNCTIONALS::PW91;
     embedding.embeddingMode = Options::KIN_EMBEDDING_MODES::NADD_FUNC;
     lcSettings.pnoSettings = Options::PNO_SETTINGS::TIGHT;
@@ -63,7 +64,7 @@ struct FreezeAndThawTaskSettings {
   REFLECTABLE((unsigned int)maxCycles, (double)convThresh, (double)gridCutOff, (bool)smallSupersystemGrid,
               (double)basisExtThresh, (bool)extendBasis, (bool)useConvAcceleration, (double)diisStart, (double)diisEnd,
               (bool)calculateSolvationEnergy, (std::vector<bool>)calculateUnrelaxedMP2Density,
-              (Options::MP2_TYPES)mp2Type, (bool)keepCoulombCache, (bool)finalEnergyEvaluation)
+              (Options::MP2_TYPES)mp2Type, (bool)keepCoulombCache, (bool)finalEnergyEvaluation, (bool)printResults)
  public:
   EmbeddingSettings embedding;
   LocalCorrelationSettings lcSettings;
@@ -101,10 +102,12 @@ class FreezeAndThawTask : public Task {
   void visit(FreezeAndThawTaskSettings& c, set_visitor v, std::string blockname) {
     if (!blockname.compare("")) {
       visit_each(c, v);
+      return;
     }
-    else if (!c.embedding.visitSettings(v, blockname)) {
-      throw SerenityError((std::string) "Unknown block in FreezeAndThawTaskSettings: " + blockname);
-    }
+    // If reached, the blockname is unknown.
+    if (c.embedding.visitAsBlockSettings(v, blockname))
+      return;
+    throw SerenityError((std::string) "Unknown block in FreezeAndThawTaskSettings: " + blockname);
   }
 
   /**

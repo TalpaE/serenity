@@ -20,9 +20,9 @@
 /* Include Class Header*/
 #include "tasks/ActiveSpaceSelectionTask.h"
 /* Include Serenity Internal Headers */
-#include "geometry/Geometry.h"        //Subsystem contrution.
-#include "settings/Settings.h"        //Subsystem contrution.
-#include "system/SystemController.h"  //Subsystem contrution.
+#include "geometry/Geometry.h"        //Subsystem construction.
+#include "settings/Settings.h"        //Subsystem construction.
+#include "system/SystemController.h"  //Subsystem construction.
 #include "tasks/GeneralizedDOSTask.h" //DOS procedure.
 #include "tasks/ScfTask.h"            //Initial SCF.
 

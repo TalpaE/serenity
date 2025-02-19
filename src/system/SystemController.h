@@ -26,10 +26,9 @@
 #include "settings/ElectronicStructureOptions.h"  //RESTRICTED/UNRESTRICTED
 #include "settings/GridOptions.h"                 //Default arguments.
 /* Include Std and External Headers */
+#include <Eigen/Dense>
 #include <memory> //smart ptr.
 #include <vector>
-/* Include Std and External Headers */
-#include <Eigen/Dense>
 
 namespace Serenity {
 /* Forward Declarations */
@@ -56,6 +55,7 @@ class MolecularSurfaceController;
 template<Options::SCF_MODES>
 class ElectrostaticPotentialOnGridController;
 class IntegralCachingController;
+struct CUSTOMFUNCTIONAL;
 /**
  * @class SystemController SystemController.h
  * @brief A quite complex class managing all data associated with a System
@@ -176,17 +176,18 @@ class SystemController : public std::enable_shared_from_this<SystemController> {
    */
   void setXCfunctional(CompositeFunctionals::XCFUNCTIONALS XCfunc);
   /**
-   * TODO this should be determined automatically
-   * @brief sets the type of the last SCF Calculation
-   * @param mode SCF calculation type
+   * @brief Sets the DFT XC functional of the system.
+   *
+   * @param customfunc the XC functional.
    */
+  void setXCfunctional(CUSTOMFUNCTIONAL customfunc);
 
   /**
    * @brief Reduces memory storage, clearing temporary data, dumping results to disk.
    *
    * This function switched the existing electronic structure to be dumped to disk, and
    *   read/written on each request that is made, also all cached integrals for this system
-   *   will b flushed.
+   *   will be flushed.
    *   This reduces the memory usage significantly for big systems, or a case with many
    *   used systems, however it means reevaluation of many properties/integrals, be sure
    *   that this is what you want when activating this mode.
@@ -230,17 +231,17 @@ class SystemController : public std::enable_shared_from_this<SystemController> {
    *
    *  See also getNECPElectrons() in Atom.h
    */
-  template<Options::SCF_MODES T>
-  SpinPolarizedData<T, unsigned int> getNElectrons() const;
+  template<Options::SCF_MODES SCFMode>
+  SpinPolarizedData<SCFMode, unsigned int> getNElectrons() const;
   /// @returns the number of occupied molecular orbitals
-  template<Options::SCF_MODES T>
-  SpinPolarizedData<T, unsigned int> getNOccupiedOrbitals() const;
+  template<Options::SCF_MODES SCFMode>
+  SpinPolarizedData<SCFMode, unsigned int> getNOccupiedOrbitals() const;
   /// @returns the number of virtual molecular orbitals
-  template<Options::SCF_MODES T>
-  SpinPolarizedData<T, unsigned int> getNVirtualOrbitals();
+  template<Options::SCF_MODES SCFMode>
+  SpinPolarizedData<SCFMode, unsigned int> getNVirtualOrbitals();
   /// @returns the number of truncated virtual molecular orbitals (only inclusion of specific virtuals)
-  template<Options::SCF_MODES T>
-  SpinPolarizedData<T, unsigned int> getNVirtualOrbitalsTruncated();
+  template<Options::SCF_MODES SCFMode>
+  SpinPolarizedData<SCFMode, unsigned int> getNVirtualOrbitalsTruncated();
 
   /**
    * @param   basisPurpose what you want to use the basis for. May have different specifications,
@@ -315,20 +316,20 @@ class SystemController : public std::enable_shared_from_this<SystemController> {
   std::shared_ptr<AtomCenteredGridController>
   getAtomCenteredGridController(Options::GRID_PURPOSES gridPurpose = Options::GRID_PURPOSES::DEFAULT) const;
   /// @returns the currently active OrbitalController
-  template<Options::SCF_MODES T>
-  std::shared_ptr<OrbitalController<T>> getActiveOrbitalController();
+  template<Options::SCF_MODES SCFMode>
+  std::shared_ptr<OrbitalController<SCFMode>> getActiveOrbitalController();
   ;
   /**
    *  @brief Runs a SCF if no active ElectronicStructure is available.
    *  @returns the currently active ElectronicStructure
    */
-  template<Options::SCF_MODES T>
-  std::shared_ptr<ElectronicStructure<T>> getElectronicStructure();
+  template<Options::SCF_MODES SCFMode>
+  std::shared_ptr<ElectronicStructure<SCFMode>> getElectronicStructure();
   /**
    *  @brief Checks if an ElectronicStructure is available.
    *  @returns Returns true if an ElectronicStructure is present.
    */
-  template<Options::SCF_MODES T>
+  template<Options::SCF_MODES SCFMode>
   bool hasElectronicStructure();
   /*
    * Forwarded getters
@@ -341,8 +342,8 @@ class SystemController : public std::enable_shared_from_this<SystemController> {
    * @brief This function generates a set of potentials for basic HF/DFT SCF runs.
    *
    * If there is no electronic structure present when this function is called then
-   * there will be an initial guess generated and stored as electronic structure.
-   * This is due to the fact that all of the potentials need reference objects.
+   * there will be an initial guess generated. The storage of the PotentialBundle inside ElectronicStructure is done in
+   * the SCF. This is due to the fact that all of the potentials need reference objects.
    *
    * @return Returns a set of potentials.
    */
@@ -357,8 +358,8 @@ class SystemController : public std::enable_shared_from_this<SystemController> {
    * Setters
    */
   /// @param electronicStructure will be used in this System from now on
-  template<Options::SCF_MODES T>
-  void setElectronicStructure(std::shared_ptr<ElectronicStructure<T>>);
+  template<Options::SCF_MODES SCFMode>
+  void setElectronicStructure(std::shared_ptr<ElectronicStructure<SCFMode>>);
 
   /**
    * @brief Set a new BasisController
@@ -458,7 +459,7 @@ class SystemController : public std::enable_shared_from_this<SystemController> {
   template<Options::SCF_MODES SCFMode>
   void produceElectrostaticPotentialOnMolecularSurfaceController(MOLECULAR_SURFACE_TYPES surfaceType);
 
-  template<Options::SCF_MODES T>
+  template<Options::SCF_MODES SCFMode>
   void produceScfTask();
 
   std::unique_ptr<System> _system;

@@ -36,6 +36,7 @@
 #include "tasks/EDATask.h"
 #include "tasks/ElectronicStructureCopyTask.h"
 #include "tasks/EvaluateEnergyTask.h"
+#include "tasks/ExportCavityTask.h"
 #include "tasks/ExportGridTask.h"
 #include "tasks/FDEETTask.h"
 #include "tasks/FDETask.h"
@@ -47,6 +48,7 @@
 #include "tasks/GeometryOptimizationTask.h"
 #include "tasks/GradientTask.h"
 #include "tasks/HessianTask.h"
+#include "tasks/ImportCavityTask.h"
 #include "tasks/LRSCFTask.h"
 #include "tasks/LocalCorrelationTask.h"
 #include "tasks/LocalizationTask.h"
@@ -66,6 +68,7 @@
 #include "tasks/VirtualOrbitalSpaceSelectionTask.h"
 #include "tasks/WavefunctionEmbeddingTask.h"
 #include "tasks/WriteIntegralsTask.h"
+
 /* Include Std and External Headers */
 #include <sstream>
 
@@ -160,6 +163,7 @@ class Input {
         continue;
       if (word[0] == '#')
         continue;
+      // sub-block options
       if (word[0] == '+') {
         std::string blockname = word.erase(0, 1);
         for (auto& c : blockname)
@@ -255,7 +259,6 @@ class Input {
       std::istringstream iss(line);
       word = "";
       iss >> word;
-      bool defaultSettings = false;
       for (auto& c : word)
         c = std::toupper(c);
       // parse systems
@@ -311,24 +314,23 @@ class Input {
         // Task block finished...
         // ...check for systems...
         if (activeSystem.size() == 0) {
-          if ((copy.compare("ACTIVESPACETASK") && copy.compare("AS")) or supersystem.size() == 0)
+          if ((copy.compare("ACTIVESPACETASK") && copy.compare("AS") && copy.compare("ACTIVESPACESELECTIONTASK")) or
+              supersystem.size() == 0)
             throw SerenityError("ERROR: No active system given for task " + name + ".");
         }
         // ...create task using the systems...
         // ...then parse and adjust them ...
         if (!copy.compare("BROKENSYMMETRYTASK") or !copy.compare("BS")) {
           auto taskptr = new BrokenSymmetryTask(activeSystem, environmentSystem);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
-        else if (!copy.compare("BASISSETTASK") or !copy.compare("BST")) {
+        else if (!copy.compare("BASISSETTASK") or !copy.compare("BST") or !copy.compare("BASISSETTRUNCATIONTASK")) {
           createTaskA(BasisSetTruncationTask, activeSystem[0]->getSCFMode(), activeSystem[0]);
         }
         else if (!copy.compare("COUPLEDCLUSTERTASK") or !copy.compare("CC")) {
           auto taskptr = new CoupledClusterTask(activeSystem[0], environmentSystem);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
         else if (!copy.compare("PLOTTASK") or !copy.compare("PLOT") or !copy.compare("CUBEFILETASK") or
@@ -337,36 +339,33 @@ class Input {
         }
         else if (!copy.compare("DISPERSIONCORRECTIONTASK") or !copy.compare("DISPERSION") or !copy.compare("DISP")) {
           auto taskptr = new DispersionCorrectionTask(activeSystem[0]);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
-        else if (!copy.compare("DFTEMB") or !copy.compare("DFTEMBEDDING") or !copy.compare("DFTEMBLC")) {
+        else if (!copy.compare("DFTEMB") or !copy.compare("DFTEMBEDDING") or !copy.compare("DFTEMBLC") or
+                 !copy.compare("DFTEMBEDDEDLOCALCORRELATIONTASK")) {
           auto taskptr = new DFTEmbeddedLocalCorrelationTask(activeSystem[0], environmentSystem,
                                                              (supersystem.size() < 1) ? nullptr : supersystem[0]);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
-        else if (!copy.compare("DOSCC")) {
+        else if (!copy.compare("DOSCC") or !copy.compare("DOSCCTASK")) {
           auto taskptr = new DOSCCTask(activeSystem);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
         else if (!copy.compare("DUMMYTASK") or !copy.compare("DUMMY")) {
           auto taskptr = new DummyTask(activeSystem);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
-        else if (!copy.compare("ENERGYTASK") or !copy.compare("ENERGY") or !copy.compare("E")) {
+        else if (!copy.compare("ENERGYTASK") or !copy.compare("ENERGY") or !copy.compare("E") or
+                 !copy.compare("EVALUATEENERGYTASK")) {
           createTaskA(EvaluateEnergyTask, activeSystem[0]->getSCFMode(), activeSystem);
         }
         else if (!copy.compare("EXPORTGRIDTASK") or !copy.compare("GRIDTASK") or !copy.compare("GRID")) {
           auto taskptr = new ExportGridTask(activeSystem[0]);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
         else if (!copy.compare("EDATASK") or !copy.compare("EDA")) {
@@ -382,17 +381,15 @@ class Input {
         }
         else if (!copy.compare("FDEETTASK") or !copy.compare("FDEET")) {
           auto taskptr = new FDEETTask(activeSystem);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
         else if (!copy.compare("FXDTASK") or !copy.compare("FXD")) {
           createTaskA(FXDTask, activeSystem[0]->getSCFMode(), activeSystem[0]);
         }
-        else if (!copy.compare("FINITEFIELD") or !copy.compare("FF")) {
+        else if (!copy.compare("FINITEFIELD") or !copy.compare("FF") or !copy.compare("FINITEFIELDTASK")) {
           auto taskptr = new FiniteFieldTask(activeSystem[0], environmentSystem);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
         else if (!copy.compare("FREEZEANDTHAWTASK") or !copy.compare("FAT")) {
@@ -403,7 +400,7 @@ class Input {
           }
           createTaskAE(FreezeAndThawTask, scfMode, activeSystem, environmentSystem);
         }
-        else if (!copy.compare("GDOS") or !copy.compare("GENERALIZEDDOS")) {
+        else if (!copy.compare("GDOS") or !copy.compare("GENERALIZEDDOS") or !copy.compare("GENERALIZEDDOSTASK")) {
           Options::SCF_MODES scfMode = Options::SCF_MODES::RESTRICTED;
           for (auto system : activeSystem) {
             if (system->getSCFMode() == Options::SCF_MODES::UNRESTRICTED)
@@ -438,20 +435,17 @@ class Input {
         }
         else if (!copy.compare("HESSIANTASK") or !copy.compare("HESSIAN") or !copy.compare("HESS")) {
           auto taskptr = new HessianTask(activeSystem, environmentSystem);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
         else if (!copy.compare("LOCALCORRELATIONTASK") or !copy.compare("LC")) {
           auto taskptr = new LocalCorrelationTask(activeSystem[0], environmentSystem);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
         else if (!copy.compare("LOCALIZATIONTASK") or !copy.compare("LOCALIZATION") or !copy.compare("LOC")) {
           auto taskptr = new LocalizationTask(activeSystem[0], environmentSystem);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
         else if (!copy.compare("LRSCFTASK") or !copy.compare("LRSCF") or !copy.compare("RICC2")) {
@@ -475,17 +469,16 @@ class Input {
         }
         else if (!copy.compare("MULTIPOLEMOMENTTASK") or !copy.compare("MULTI")) {
           auto taskptr = new MultipoleMomentTask(activeSystem);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
-        else if (!copy.compare("POPULATIONANALYSISTASK") or !copy.compare("POPULATION") or !copy.compare("POP")) {
+        else if (!copy.compare("POPULATIONANALYSISTASK") or !copy.compare("POPULATION") or !copy.compare("POP") or
+                 !copy.compare("POPANALYSISTASK")) {
           createTaskA(PopAnalysisTask, activeSystem[0]->getSCFMode(), activeSystem[0]);
         }
         else if (!copy.compare("PCMINTERACTIONENERGYTASK") or !copy.compare("PCM")) {
           auto taskptr = new PCMInteractionEnergyTask(activeSystem[0]);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
         else if (!copy.compare("PROJECTIONBASEDEMBTASK") or !copy.compare("PBE") or !copy.compare("TDEMBEDDINGTASK") or
@@ -503,11 +496,12 @@ class Input {
           }
           createTaskAE(TDEmbeddingTask, scfMode, activeSystem[0], environmentSystem[0]);
         }
-        else if (!copy.compare("QRO") or !copy.compare("QUASIRESTRICTEDORBITALS")) {
+        else if (!copy.compare("QRO") or !copy.compare("QUASIRESTRICTEDORBITALS") or
+                 !copy.compare("QUASIRESTRICTEDORBITALSTASK")) {
           createTaskAE(QuasiRestrictedOrbitalsTask, activeSystem[0]->getSCFMode(), activeSystem[0], environmentSystem);
         }
         else if (!copy.compare("READORBS") or !copy.compare("READ") or !copy.compare("WRITEORBS") or
-                 !copy.compare("WRITE") or !copy.compare("IO")) {
+                 !copy.compare("WRITE") or !copy.compare("IO") or !copy.compare("ORBITALSIOTASK")) {
           createTaskA(OrbitalsIOTask, activeSystem[0]->getSCFMode(), activeSystem[0]);
         }
         else if (!copy.compare("SCFTASK") or !copy.compare("SCF")) {
@@ -521,7 +515,7 @@ class Input {
             createTaskAE(OrthogonalizationTask, activeSystem[0]->getSCFMode(), activeSystem, nullptr);
           }
         }
-        else if (!copy.compare("ACTIVESPACETASK") or !copy.compare("AS")) {
+        else if (!copy.compare("ACTIVESPACETASK") or !copy.compare("AS") or !copy.compare("ACTIVESPACESELECTIONTASK")) {
           Options::SCF_MODES scfMode = Options::SCF_MODES::RESTRICTED;
           for (auto system : supersystem) {
             if (system->getSCFMode() == Options::SCF_MODES::UNRESTRICTED)
@@ -537,31 +531,40 @@ class Input {
           }
           createTaskAE(VirtualOrbitalSpaceSelectionTask, scfMode, activeSystem, environmentSystem);
         }
-        else if (!copy.compare("SPLIT") or !copy.compare("SPLITTINGTASK")) {
+        else if (!copy.compare("SPLIT") or !copy.compare("SPLITTINGTASK") or !copy.compare("SYSTEMSPLITTINGTASK")) {
           createTaskAE(SystemSplittingTask, activeSystem[0]->getSCFMode(), activeSystem[0], environmentSystem);
         }
-        else if (!copy.compare("ADD") or !copy.compare("ADDITIONTASK")) {
+        else if (!copy.compare("ADD") or !copy.compare("ADDITIONTASK") or !copy.compare("SYSTEMADDITIONTASK")) {
           createTaskAE(SystemAdditionTask, activeSystem[0]->getSCFMode(), activeSystem[0], environmentSystem);
         }
-        else if (!copy.compare("COPY") or !copy.compare("ESC")) {
+        else if (!copy.compare("COPY") or !copy.compare("ESC") or !copy.compare("ELECTRONICSTRUCTURECOPYTASK")) {
           createTaskAE(ElectronicStructureCopyTask, activeSystem[0]->getSCFMode(), activeSystem[0], environmentSystem);
+        }
+        else if (!copy.compare("EXPORTCAVITY") or !copy.compare("EXPORTCAVITYTASK")) {
+          auto taskptr = new ExportCavityTask(activeSystem[0]);
+          Input::parseTaskSettings(taskptr, settingsStream);
+          task.reset(taskptr);
+        }
+        else if (!copy.compare("IMPORTCAVITY") or !copy.compare("IMPORTCAVITYTASK")) {
+          auto taskptr = new ImportCavityTask(activeSystem[0]);
+          Input::parseTaskSettings(taskptr, settingsStream);
+          task.reset(taskptr);
         }
         else if (!copy.compare("TS") or !copy.compare("TSOPT") or !copy.compare("TSTASK")) {
           auto taskptr = new TSTask(activeSystem[0], environmentSystem);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
-        else if (!copy.compare("WFEMB") or !copy.compare("WAVEFUNCTIONEMBEDDING")) {
+        else if (!copy.compare("WFEMB") or !copy.compare("WAVEFUNCTIONEMBEDDING") or
+                 !copy.compare("WAVEFUNCTIONEMBEDDINGTASK")) {
           auto taskptr = new WavefunctionEmbeddingTask(activeSystem[0], environmentSystem);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
-        else if (!copy.compare("INT") or !copy.compare("WRITEINTS") or !copy.compare("INTEGRALS")) {
+        else if (!copy.compare("INT") or !copy.compare("WRITEINTS") or !copy.compare("INTEGRALS") or
+                 !copy.compare("WRITEINTEGRALSTASK")) {
           auto taskptr = new WriteIntegralsTask(activeSystem[0]);
-          if (!defaultSettings)
-            Input::parseTaskSettings(taskptr, settingsStream);
+          Input::parseTaskSettings(taskptr, settingsStream);
           task.reset(taskptr);
         }
         else {

@@ -27,7 +27,6 @@
 #include "tasks/LRSCFTask.h"
 #include "tasks/ScfTask.h"
 #include "tasks/TDEmbeddingTask.h"
-/* Include Serenity Internal Headers */
 #include "testsupply/SystemController__TEST_SUPPLY.h"
 /* Include Std and External Headers */
 #include <gtest/gtest.h>

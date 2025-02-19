@@ -19,6 +19,8 @@ set(SERENITY_CPPS
   ${PROJECT_SOURCE_DIR}/src/analysis/orbitalLocalization/PipekMezeyLocalization.cpp
   ${PROJECT_SOURCE_DIR}/src/analysis/orbitalLocalization/SPADEAlgorithm.cpp
   ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/BeckePopulationCalculator.cpp
+  ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/CHELPGPopulationCalculator.cpp
+  ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/CM5PopulationCalculator.cpp
   ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/HirshfeldPopulationCalculator.cpp
   ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/IAOPopulationCalculator.cpp
   ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/LoewdinPopulationCalculator.cpp
@@ -81,6 +83,7 @@ set(SERENITY_CPPS
   ${PROJECT_SOURCE_DIR}/src/geometry/Ellipse.cpp
   ${PROJECT_SOURCE_DIR}/src/geometry/GEPOLSurfaceConstructor.cpp
   ${PROJECT_SOURCE_DIR}/src/geometry/Geometry.cpp
+  ${PROJECT_SOURCE_DIR}/src/geometry/GeometryAdderFactory.cpp
   ${PROJECT_SOURCE_DIR}/src/geometry/GeometryFileReader.cpp
   ${PROJECT_SOURCE_DIR}/src/geometry/Line.cpp
   ${PROJECT_SOURCE_DIR}/src/geometry/MolecularSurface.cpp
@@ -95,10 +98,11 @@ set(SERENITY_CPPS
   ${PROJECT_SOURCE_DIR}/src/geometry/gradients/CoreCoreRepulsionDerivative.cpp
   ${PROJECT_SOURCE_DIR}/src/geometry/gradients/NumericalGeomGradCalc.cpp
   ${PROJECT_SOURCE_DIR}/src/geometry/gradients/NumericalHessianCalc.cpp
+  ${PROJECT_SOURCE_DIR}/src/geometry/gradients/TDDFTGradientCalculator.cpp
   ${PROJECT_SOURCE_DIR}/src/grid/AtomCenteredGridController.cpp
+  ${PROJECT_SOURCE_DIR}/src/grid/AtomCenteredGridControllerFactory.cpp
   ${PROJECT_SOURCE_DIR}/src/grid/GaussLegendre.cpp
   ${PROJECT_SOURCE_DIR}/src/grid/GridController.cpp
-  ${PROJECT_SOURCE_DIR}/src/grid/GridControllerFactory.cpp
   ${PROJECT_SOURCE_DIR}/src/grid/HilbertRTreeSorting.cpp
   ${PROJECT_SOURCE_DIR}/src/grid/construction/AtomGridFactory.cpp
   ${PROJECT_SOURCE_DIR}/src/grid/construction/GridFactory.cpp
@@ -108,6 +112,8 @@ set(SERENITY_CPPS
   ${PROJECT_SOURCE_DIR}/src/integrals/IntegralCachingController.cpp
   ${PROJECT_SOURCE_DIR}/src/integrals/MO3CenterIntegralController.cpp
   ${PROJECT_SOURCE_DIR}/src/integrals/OneElectronIntegralController.cpp
+  ${PROJECT_SOURCE_DIR}/src/integrals/OneElectronIntegralDerivativeCalculator.cpp
+  ${PROJECT_SOURCE_DIR}/src/integrals/RIIntegralDerivativeCalculator.cpp
   ${PROJECT_SOURCE_DIR}/src/integrals/RI_J_IntegralController.cpp
   ${PROJECT_SOURCE_DIR}/src/integrals/decomposer/CholeskyDecomposer.cpp
   ${PROJECT_SOURCE_DIR}/src/integrals/decomposer/SimpleCholeskyDecomposer.cpp
@@ -135,6 +141,7 @@ set(SERENITY_CPPS
   ${PROJECT_SOURCE_DIR}/src/math/optimizer/BFGS.cpp
   ${PROJECT_SOURCE_DIR}/src/math/optimizer/LBFGS.cpp
   ${PROJECT_SOURCE_DIR}/src/math/optimizer/NewtonRaphson.cpp
+  ${PROJECT_SOURCE_DIR}/src/math/optimizer/SQNM.cpp
   ${PROJECT_SOURCE_DIR}/src/math/optimizer/SteepestDescent.cpp
   ${PROJECT_SOURCE_DIR}/src/math/saddlepoint/Bofill.cpp
   ${PROJECT_SOURCE_DIR}/src/math/saddlepoint/QST.cpp
@@ -156,7 +163,6 @@ set(SERENITY_CPPS
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/DeltaSpinSquared.cpp
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/DipoleIntegrals.cpp
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/ExcitationSpectrum.cpp
-  ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/ExcitedStatesAnalysis.cpp
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/LRSCFAnalysis.cpp
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/LRSCFPopulationAnalysis.cpp
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/NROCalculator.cpp
@@ -189,6 +195,7 @@ set(SERENITY_CPPS
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/ExchangeSigmavector.cpp
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/FockSigmavector.cpp
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/GrimmeSigmavector.cpp
+  ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/HyperkernelSigmavector.cpp
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/KernelSigmavector.cpp
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/RI/MRICoulombSigmavector.cpp
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/RI/RICoulombSigmavector.cpp
@@ -234,8 +241,8 @@ set(SERENITY_CPPS
   ${PROJECT_SOURCE_DIR}/src/potentials/ABFockMatrixConstruction/ABNAddFuncPotential.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/BUReconstructionPotential.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/CDHFPotential.cpp
+  ${PROJECT_SOURCE_DIR}/src/potentials/ChargeElectronInteractionPotential.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/CoulombInteractionPotential.cpp
-  ${PROJECT_SOURCE_DIR}/src/potentials/CoulombPotential.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/ECPInteractionPotential.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/ERIPotential.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/EffectiveCorePotential.cpp
@@ -254,6 +261,7 @@ set(SERENITY_CPPS
   ${PROJECT_SOURCE_DIR}/src/potentials/NEInteractionPotential.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/OptEffPotential.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/PCMPotential.cpp
+  ${PROJECT_SOURCE_DIR}/src/potentials/RICoulombPotential.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/RIExchangePotential.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/SAOPPotential.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/TDReconstructionPotential.cpp
@@ -306,6 +314,7 @@ set(SERENITY_CPPS
   ${PROJECT_SOURCE_DIR}/src/tasks/EDATask.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/ElectronicStructureCopyTask.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/EvaluateEnergyTask.cpp
+  ${PROJECT_SOURCE_DIR}/src/tasks/ExportCavityTask.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/ExportGridTask.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/FDEETTask.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/FDETask.cpp
@@ -317,6 +326,7 @@ set(SERENITY_CPPS
   ${PROJECT_SOURCE_DIR}/src/tasks/GeometryOptimizationTask.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/GradientTask.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/HessianTask.cpp
+  ${PROJECT_SOURCE_DIR}/src/tasks/ImportCavityTask.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/LRSCFTask.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/LocalCorrelationTask.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/LocalizationTask.cpp
@@ -361,6 +371,8 @@ set(SERENITY_HEADERS
   ${PROJECT_SOURCE_DIR}/src/analysis/orbitalLocalization/PipekMezeyLocalization.h
   ${PROJECT_SOURCE_DIR}/src/analysis/orbitalLocalization/SPADEAlgorithm.h
   ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/BeckePopulationCalculator.h
+  ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/CHELPGPopulationCalculator.h
+  ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/CM5PopulationCalculator.h
   ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/HirshfeldPopulationCalculator.h
   ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/IAOPopulationCalculator.h
   ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/LoewdinPopulationCalculator.h
@@ -436,7 +448,7 @@ set(SERENITY_HEADERS
   ${PROJECT_SOURCE_DIR}/src/geometry/Ellipse.h
   ${PROJECT_SOURCE_DIR}/src/geometry/GEPOLSurfaceConstructor.h
   ${PROJECT_SOURCE_DIR}/src/geometry/Geometry.h
-  ${PROJECT_SOURCE_DIR}/src/geometry/GeometryFactory.h
+  ${PROJECT_SOURCE_DIR}/src/geometry/GeometryAdderFactory.h
   ${PROJECT_SOURCE_DIR}/src/geometry/GeometryFileReader.h
   ${PROJECT_SOURCE_DIR}/src/geometry/Line.h
   ${PROJECT_SOURCE_DIR}/src/geometry/MolecularSurface.h
@@ -453,12 +465,13 @@ set(SERENITY_HEADERS
   ${PROJECT_SOURCE_DIR}/src/geometry/gradients/HessianCalculator.h
   ${PROJECT_SOURCE_DIR}/src/geometry/gradients/NumericalGeomGradCalc.h
   ${PROJECT_SOURCE_DIR}/src/geometry/gradients/NumericalHessianCalc.h
+  ${PROJECT_SOURCE_DIR}/src/geometry/gradients/TDDFTGradientCalculator.h
   ${PROJECT_SOURCE_DIR}/src/grid/AtomCenteredGrid.h
   ${PROJECT_SOURCE_DIR}/src/grid/AtomCenteredGridController.h
+  ${PROJECT_SOURCE_DIR}/src/grid/AtomCenteredGridControllerFactory.h
   ${PROJECT_SOURCE_DIR}/src/grid/GaussLegendre.h
   ${PROJECT_SOURCE_DIR}/src/grid/Grid.h
   ${PROJECT_SOURCE_DIR}/src/grid/GridController.h
-  ${PROJECT_SOURCE_DIR}/src/grid/GridControllerFactory.h
   ${PROJECT_SOURCE_DIR}/src/grid/HilbertRTreeSorting.h
   ${PROJECT_SOURCE_DIR}/src/grid/construction/AtomGrid.h
   ${PROJECT_SOURCE_DIR}/src/grid/construction/AtomGridFactory.h
@@ -471,7 +484,9 @@ set(SERENITY_HEADERS
   ${PROJECT_SOURCE_DIR}/src/integrals/MO3CenterIntegralController.h
   ${PROJECT_SOURCE_DIR}/src/integrals/Normalization.h
   ${PROJECT_SOURCE_DIR}/src/integrals/OneElectronIntegralController.h
+  ${PROJECT_SOURCE_DIR}/src/integrals/OneElectronIntegralDerivativeCalculator.h
   ${PROJECT_SOURCE_DIR}/src/integrals/OneIntControllerFactory.h
+  ${PROJECT_SOURCE_DIR}/src/integrals/RIIntegralDerivativeCalculator.h
   ${PROJECT_SOURCE_DIR}/src/integrals/RI_J_IntegralController.h
   ${PROJECT_SOURCE_DIR}/src/integrals/RI_J_IntegralControllerFactory.h
   ${PROJECT_SOURCE_DIR}/src/integrals/decomposer/CholeskyDecomposer.h
@@ -517,6 +532,7 @@ set(SERENITY_HEADERS
   ${PROJECT_SOURCE_DIR}/src/math/optimizer/LBFGS.h
   ${PROJECT_SOURCE_DIR}/src/math/optimizer/NewtonRaphson.h
   ${PROJECT_SOURCE_DIR}/src/math/optimizer/Optimizer.h
+  ${PROJECT_SOURCE_DIR}/src/math/optimizer/SQNM.h
   ${PROJECT_SOURCE_DIR}/src/math/optimizer/SteepestDescent.h
   ${PROJECT_SOURCE_DIR}/src/math/saddlepoint/Bofill.h
   ${PROJECT_SOURCE_DIR}/src/math/saddlepoint/QST.h
@@ -545,7 +561,6 @@ set(SERENITY_HEADERS
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/DeltaSpinSquared.h
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/DipoleIntegrals.h
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/ExcitationSpectrum.h
-  ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/ExcitedStatesAnalysis.h
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/LRSCFAnalysis.h
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/LRSCFPopulationAnalysis.h
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Analysis/NROCalculator.h
@@ -561,6 +576,7 @@ set(SERENITY_HEADERS
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/ExchangeSigmavector.h
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/FockSigmavector.h
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/GrimmeSigmavector.h
+  ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/HyperkernelSigmavector.h
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/KernelSigmavector.h
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/RI/MRICoulombSigmavector.h
   ${PROJECT_SOURCE_DIR}/src/postHF/LRSCF/Sigmavectors/RI/RICoulombSigmavector.h
@@ -610,8 +626,8 @@ set(SERENITY_HEADERS
   ${PROJECT_SOURCE_DIR}/src/potentials/ABFockMatrixConstruction/ABZeroPotential.h
   ${PROJECT_SOURCE_DIR}/src/potentials/BUReconstructionPotential.h
   ${PROJECT_SOURCE_DIR}/src/potentials/CDHFPotential.h
+  ${PROJECT_SOURCE_DIR}/src/potentials/ChargeElectronInteractionPotential.h
   ${PROJECT_SOURCE_DIR}/src/potentials/CoulombInteractionPotential.h
-  ${PROJECT_SOURCE_DIR}/src/potentials/CoulombPotential.h
   ${PROJECT_SOURCE_DIR}/src/potentials/ECPInteractionPotential.h
   ${PROJECT_SOURCE_DIR}/src/potentials/ERIPotential.h
   ${PROJECT_SOURCE_DIR}/src/potentials/EffectiveCorePotential.h
@@ -631,6 +647,7 @@ set(SERENITY_HEADERS
   ${PROJECT_SOURCE_DIR}/src/potentials/OptEffPotential.h
   ${PROJECT_SOURCE_DIR}/src/potentials/PCMPotential.h
   ${PROJECT_SOURCE_DIR}/src/potentials/Potential.h
+  ${PROJECT_SOURCE_DIR}/src/potentials/RICoulombPotential.h
   ${PROJECT_SOURCE_DIR}/src/potentials/RIExchangePotential.h
   ${PROJECT_SOURCE_DIR}/src/potentials/SAOPPotential.h
   ${PROJECT_SOURCE_DIR}/src/potentials/TDReconstructionPotential.h
@@ -690,6 +707,7 @@ set(SERENITY_HEADERS
   ${PROJECT_SOURCE_DIR}/src/tasks/EDATask.h
   ${PROJECT_SOURCE_DIR}/src/tasks/ElectronicStructureCopyTask.h
   ${PROJECT_SOURCE_DIR}/src/tasks/EvaluateEnergyTask.h
+  ${PROJECT_SOURCE_DIR}/src/tasks/ExportCavityTask.h
   ${PROJECT_SOURCE_DIR}/src/tasks/ExportGridTask.h
   ${PROJECT_SOURCE_DIR}/src/tasks/FDEETTask.h
   ${PROJECT_SOURCE_DIR}/src/tasks/FDETask.h
@@ -701,6 +719,7 @@ set(SERENITY_HEADERS
   ${PROJECT_SOURCE_DIR}/src/tasks/GeometryOptimizationTask.h
   ${PROJECT_SOURCE_DIR}/src/tasks/GradientTask.h
   ${PROJECT_SOURCE_DIR}/src/tasks/HessianTask.h
+  ${PROJECT_SOURCE_DIR}/src/tasks/ImportCavityTask.h
   ${PROJECT_SOURCE_DIR}/src/tasks/LRSCFTask.h
   ${PROJECT_SOURCE_DIR}/src/tasks/LocalCorrelationTask.h
   ${PROJECT_SOURCE_DIR}/src/tasks/LocalizationTask.h
@@ -741,11 +760,13 @@ set(SERENITY_PYTHON_FILES
   ${PROJECT_SOURCE_DIR}/src/system/SystemController_python.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/CoupledClusterTask_python.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/DispersionCorrectionTask_python.cpp
+  ${PROJECT_SOURCE_DIR}/src/tasks/ExportCavityTask_python.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/FDETask_python.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/FreezeAndThawTask_python.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/GeneralizedDOSTask_python.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/GeometryOptimizationTask_python.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/GradientTask_python.cpp
+  ${PROJECT_SOURCE_DIR}/src/tasks/ImportCavityTask_python.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/LRSCFTask_python.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/LocalizationTask_python.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/MP2Task_python.cpp
@@ -776,12 +797,13 @@ set(SERENITY_TEST_FILES
   ${PROJECT_SOURCE_DIR}/src/analysis/orbitalLocalization/OrbitalAligner_test.cpp
   ${PROJECT_SOURCE_DIR}/src/analysis/orbitalLocalization/PipekMezeyLocalization_test.cpp
   ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/BeckePopulationCalculator_test.cpp
+  ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/CHELPGPopulationCalculator_test.cpp
+  ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/CM5PopulationCalculator_test.cpp
   ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/HirshfeldPopulationCalculator_test.cpp
   ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/IAOPopulationCalculator_test.cpp
   ${PROJECT_SOURCE_DIR}/src/analysis/populationAnalysis/MullikenPopulationCalculator_test.cpp
   ${PROJECT_SOURCE_DIR}/src/basis/BasisExtension_test.cpp
   ${PROJECT_SOURCE_DIR}/src/basis/CartesianToSphericalTransformer_test.cpp
-  ${PROJECT_SOURCE_DIR}/src/basis/Shell_test.cpp
   ${PROJECT_SOURCE_DIR}/src/basis/SphericalHarmonicsRotations_test.cpp
   ${PROJECT_SOURCE_DIR}/src/data/OrbitalController_test.cpp
   ${PROJECT_SOURCE_DIR}/src/data/OrbitalPair_test.cpp
@@ -823,6 +845,7 @@ set(SERENITY_TEST_FILES
   ${PROJECT_SOURCE_DIR}/src/geometry/Triangle_test.cpp
   ${PROJECT_SOURCE_DIR}/src/geometry/efields/ElectricFields_test.cpp
   ${PROJECT_SOURCE_DIR}/src/geometry/gradients/CoreCoreRepulsionDerivative_test.cpp
+  ${PROJECT_SOURCE_DIR}/src/geometry/gradients/TDDFTGradientCalculator_test.cpp
   ${PROJECT_SOURCE_DIR}/src/grid/GaussLegendre_test.cpp
   ${PROJECT_SOURCE_DIR}/src/grid/HilbertRTreeSorting_test.cpp
   ${PROJECT_SOURCE_DIR}/src/grid/construction/AtomGridFactory_test.cpp
@@ -848,6 +871,7 @@ set(SERENITY_TEST_FILES
   ${PROJECT_SOURCE_DIR}/src/math/linearAlgebra/PadeApproximation_test.cpp
   ${PROJECT_SOURCE_DIR}/src/math/optimizer/BFGS_test.cpp
   ${PROJECT_SOURCE_DIR}/src/math/optimizer/NewtonRaphson_test.cpp
+  ${PROJECT_SOURCE_DIR}/src/math/optimizer/SQNM_test.cpp
   ${PROJECT_SOURCE_DIR}/src/math/optimizer/SteepestDescent_test.cpp
   ${PROJECT_SOURCE_DIR}/src/math/saddlepoint/Bofill_test.cpp
   ${PROJECT_SOURCE_DIR}/src/math/saddlepoint/QST_test.cpp
@@ -885,7 +909,6 @@ set(SERENITY_TEST_FILES
   ${PROJECT_SOURCE_DIR}/src/potentials/ABFockMatrixConstruction/ABZeroPotential_test.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/BUReconstructionPotential_test.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/CoulombInteractionPotential_test.cpp
-  ${PROJECT_SOURCE_DIR}/src/potentials/CoulombPotential_test.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/ECPInteractionPotential_test.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/ERIPotential_test.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/EffectiveCorePotential_test.cpp
@@ -900,6 +923,7 @@ set(SERENITY_TEST_FILES
   ${PROJECT_SOURCE_DIR}/src/potentials/NEInteractionPotential_test.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/OptEffPotential_test.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/PCMPotential_test.cpp
+  ${PROJECT_SOURCE_DIR}/src/potentials/RICoulombPotential_test.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/SAOPPotential_test.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/ZeroPotential_test.cpp
   ${PROJECT_SOURCE_DIR}/src/potentials/bundles/EDAPotentials_test.cpp
@@ -922,6 +946,7 @@ set(SERENITY_TEST_FILES
   ${PROJECT_SOURCE_DIR}/src/tasks/EDATask_test.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/ElectronicStructureCopyTask_test.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/EvaluateEnergyTask_test.cpp
+  ${PROJECT_SOURCE_DIR}/src/tasks/ExportCavityTask_test.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/ExportGridTask_test.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/FDEETTask_test.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/FDETask_test.cpp
@@ -933,6 +958,7 @@ set(SERENITY_TEST_FILES
   ${PROJECT_SOURCE_DIR}/src/tasks/GeometryOptimizationTask_test.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/GradientTask_test.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/HessianTask_test.cpp
+  ${PROJECT_SOURCE_DIR}/src/tasks/ImportCavityTask_test.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/LRSCFTaskBSE_test.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/LRSCFTaskCC2_test.cpp
   ${PROJECT_SOURCE_DIR}/src/tasks/LRSCFTaskRI_test.cpp

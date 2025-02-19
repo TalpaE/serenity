@@ -18,15 +18,15 @@
  *  If not, see <http://www.gnu.org/licenses/>.\n
  */
 
+/* Include Class Header*/
 #include "postHF/LRSCF/Sigmavectors/EOSigmavector.h"
-
 /* Include Serenity Internal Headers */
 #include "basis/AtomCenteredBasisControllerFactory.h"
 #include "data/ElectronicStructure.h"
 #include "data/OrbitalController.h"
-#include "grid/GridControllerFactory.h"
 #include "settings/EmbeddingSettings.h"
 #include "settings/Settings.h"
+/* Include Std and External Headers */
 #include <iomanip>
 /* Construction of embedded fock matrix. */
 #include "basis/BasisFunctionMapper.h"

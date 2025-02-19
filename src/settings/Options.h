@@ -44,6 +44,8 @@ namespace Options {
  * @param field The field to be parsed to.
  *
  * Note that this function has to be implemented for every possible option data type.
+ * Also note that the resolve function is intended to work in both directions (from string to T when parsing the input,
+ * from T to string e.g. when writing the settings to file).
  */
 // Default resolve function.
 template<class T>
@@ -160,9 +162,13 @@ inline void resolve<std::string>(std::string& value, std::string& field) {
 template<>
 inline void resolve<std::vector<unsigned int>>(std::string& value, std::vector<unsigned int>& field) {
   if (value.empty()) {
-    for (unsigned int val : field) {
-      std::string varAsString = boost::lexical_cast<std::string>(val);
-      value += (varAsString + " ");
+    if (field.size()) {
+      value = "{ ";
+      for (unsigned int val : field) {
+        std::string varAsString = boost::lexical_cast<std::string>(val);
+        value += (varAsString + " ");
+      }
+      value += "}";
     }
   }
   else {
@@ -316,9 +322,13 @@ inline void resolve<std::vector<bool>>(std::string& value, std::vector<bool>& fi
 template<>
 inline void resolve<std::vector<double>>(std::string& value, std::vector<double>& field) {
   if (value.empty()) {
-    for (double val : field) {
-      std::string varAsString = boost::lexical_cast<std::string>(val);
-      value += (varAsString + " ");
+    if (field.size()) {
+      value = "{ ";
+      for (double val : field) {
+        std::string varAsString = boost::lexical_cast<std::string>(val);
+        value += (varAsString + " ");
+      }
+      value += "}";
     }
   }
   else {
@@ -367,6 +377,13 @@ inline void resolve<std::vector<std::string>>(std::string& value, std::vector<st
   }
 }
 
+/**
+ * @brief A helper function converting a key string to a field of a map, or, conversely, find the first key that matches
+ * the given field.
+ * @param m The map containing pairs of std::string and members of class T.
+ * @param key The key used to lookup map entries. If it is empty, fill it so that its map entry matches the given field.
+ * @param field The class T object found as the key's entry. In reverse mode, this is the search value.
+ */
 template<class T>
 void check(const std::map<std::string, T> m, std::string& key, T& field) {
   if (key.empty()) {

@@ -26,6 +26,7 @@ serenity.sh
 src/tasks/DummyTask.cpp
 src/tasks/DummyTask.h
 test.input
+qcserenity/serenipy.so
 
 # Output files
 *.input
@@ -50,3 +51,8 @@ src/.vscode/
 codetemplates.xml
 eclipseFormatProfile.xml
 *eclipse*
+
+# CIbuildwheel stuff
+wheelhouse/
+dist/
+**/__pycache__

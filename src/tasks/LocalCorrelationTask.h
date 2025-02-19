@@ -77,7 +77,7 @@ class LocalCorrelationTask : public Task {
       visit_each(c, v);
       return;
     }
-    if (c.lcSettings.visitSettings(v, blockname))
+    if (c.lcSettings.visitAsBlockSettings(v, blockname))
       return;
     if (c.loc.visitAsBlockSettings(v, blockname))
       return;

@@ -46,5 +46,8 @@ void export_EmbeddingSettings(py::module& spy) {
       .def_readwrite("truncateProjector", &EmbeddingSettings::truncateProjector)
       .def_readwrite("projecTruncThresh", &EmbeddingSettings::projecTruncThresh)
       .def_readwrite("fermiShift", &EmbeddingSettings::fermiShift)
-      .def_readwrite("calculateMP2Correction", &EmbeddingSettings::calculateMP2Correction);
+      .def_readwrite("calculateMP2Correction", &EmbeddingSettings::calculateMP2Correction)
+      .def_readwrite("customNaddXCFunc", &EmbeddingSettings::customNaddXCFunc)
+      .def_readwrite("customNaddKinFunc", &EmbeddingSettings::customNaddKinFunc)
+      .def_readwrite("customLongRangeNaddKinFunc", &EmbeddingSettings::customLongRangeNaddKinFunc);
 }

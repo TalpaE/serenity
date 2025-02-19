@@ -90,7 +90,7 @@ class OrbitalTripleSet;
  *   pnoCoreScaling                          --- Scaling factor for pairs/singles that include core-like orbitals.
  *   useFrozenCore                           --- Use the frozen-core approximation.
  *   energyCutOff                            --- Orbital energy cut-off to determine core-like orbitals.
- *   useTriplesCoreScaling                   --- Use the pnoCoreScaling for triples that contain core-like orbtials.
+ *   useTriplesCoreScaling                   --- Use the pnoCoreScaling for triples that contain core-like orbitals.
  *   pnoSettings                             --- PNO macro setting (LOOSE,NORMAL,TIGHT)
  *   method                                  --- Local-correlation method used.
  *   topDownReconstruction                   --- Enforce top-down ansatz for potential reconstruction.
@@ -197,18 +197,17 @@ struct LocalCorrelationSettings {
   /** ==== FOCK MATRIX  CONSTRUCTION ==== **/
   EmbeddingSettings embeddingSettings;
   /**
-   * @brief Parse the settings from the input an instance of this class.
+   * @brief Parse the settings from the input to an instance of this class.
    * @param c The settings.
    * @param v The visitor which contains the settings strings.
    * @param blockname A potential block name.
    */
-  bool visitSettings(set_visitor v, std::string blockname) {
+  bool visitAsBlockSettings(set_visitor v, std::string blockname) {
     if (!blockname.compare("LC")) {
       visit_each(*this, v);
       return true;
     }
-    else if (!blockname.compare("EMB")) {
-      visit_each(this->embeddingSettings, v);
+    else if (this->embeddingSettings.visitAsBlockSettings(v, blockname)) {
       return true;
     }
     return false;

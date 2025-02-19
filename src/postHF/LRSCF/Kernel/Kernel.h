@@ -24,6 +24,7 @@
 /* Include Serenity Internal Headers */
 #include "data/DoublySpinPolarizedData.h"
 #include "data/grid/DensityMatrixDensityOnGridController.h"
+#include "dft/Functional.h"
 #include "dft/functionals/wrappers/PartialDerivatives.h"
 #include "math/Derivatives.h"
 #include "settings/GridOptions.h"
@@ -72,7 +73,7 @@ class Kernel {
    * @param act A vector of SystemControllers for which the derivatives shall be calculated.
    * @param env A vector of environment SystemControllers needed for non-additive contributions.
    * @param settings The LRSCFTask settings.
-   * @param nLRSCF The number of LRSCFControllers.
+   * @param nLRSCF The number of LRSCFControllers. AR: Isn't this always act.size()?
    * @param gridAccuracy The grid accuracy.
    */
   Kernel(std::vector<std::shared_ptr<SystemController>> act, std::vector<std::shared_ptr<SystemController>> env,
@@ -159,7 +160,7 @@ class Kernel {
 
   // If _func is none, the functional for the active system is taken from settings.dft.
   // Else, all XC functionals are evaluated with _func.
-  std::vector<CompositeFunctionals::XCFUNCTIONALS> _func;
+  std::vector<Functional> _func;
 
   // True if gga functional is used
   bool _gga;

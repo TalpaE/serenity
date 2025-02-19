@@ -35,9 +35,10 @@
 #include "geometry/Geometry.h"
 #include "geometry/MolecularSurfaceController.h"
 #include "geometry/gradients/GeometryGradientCalculator.h"
-#include "grid/GridControllerFactory.h"
+#include "grid/AtomCenteredGridControllerFactory.h"
 #include "integrals/wrappers/Libint.h"
 #include "io/FormattedOutput.h"
+#include "io/FormattedOutputStream.h"
 #include "io/IOOptions.h"
 #include "math/optimizer/BFGS.h"
 #include "math/optimizer/Optimizer.h"
@@ -131,8 +132,6 @@ void FreezeAndThawTask<SCFMode>::run() {
 
   // Supersystem grid
   std::shared_ptr<GridController> supersystemgrid(nullptr);
-  // Supersystem molecular surface
-  std::shared_ptr<MolecularSurfaceController> molecularSurface(nullptr);
   std::vector<std::shared_ptr<DensityOnGridController<SCFMode>>> densOnGridControllers(
       _activeSystems.size() + _passiveSystems.size(), nullptr);
 
@@ -294,7 +293,9 @@ void FreezeAndThawTask<SCFMode>::run() {
 
     // Convergence check.
     if (std::find(convergedSubsystems.begin(), convergedSubsystems.end(), false) == convergedSubsystems.end()) {
-      printSubSectionTitle((std::string) "Converged after " + (cycle + 1) + " freeze-and-thaw cycles!");
+      if (settings.printResults) {
+        printSubSectionTitle((std::string) "Converged after " + (cycle + 1) + " freeze-and-thaw cycles!");
+      }
       break;
     }
     // Accelerate convergence
@@ -323,10 +324,15 @@ void FreezeAndThawTask<SCFMode>::run() {
 
     Options::GRID_PURPOSES finalGridacc =
         (settings.smallSupersystemGrid) ? Options::GRID_PURPOSES::SMALL : Options::GRID_PURPOSES::DEFAULT;
-    auto finalGrid = GridControllerFactory::produce(finalGridGeometry, _activeSystems[0]->getSettings().grid, finalGridacc);
+    auto finalGrid =
+        AtomCenteredGridControllerFactory::produce(finalGridGeometry, _activeSystems[0]->getSettings().grid, finalGridacc);
 
-    auto xcfunc = resolveFunctional(settings.embedding.naddXCFunc);
-    auto kinefunc = resolveFunctional(settings.embedding.naddKinFunc);
+    auto xcfunc = settings.embedding.customNaddXCFunc.basicFunctionals.size()
+                      ? Functional(settings.embedding.customNaddXCFunc)
+                      : resolveFunctional(settings.embedding.naddXCFunc);
+    auto kinefunc = settings.embedding.customNaddKinFunc.basicFunctionals.size()
+                        ? Functional(settings.embedding.customNaddKinFunc)
+                        : resolveFunctional(settings.embedding.naddKinFunc);
     bool gga(kinefunc.getFunctionalClass() != CompositeFunctionals::CLASSES::LDA or
              xcfunc.getFunctionalClass() != CompositeFunctionals::CLASSES::LDA);
 
@@ -381,12 +387,14 @@ void FreezeAndThawTask<SCFMode>::run() {
       eCont->addOrReplaceComponent(ENERGY_CONTRIBUTIONS::FDE_NAD_KINETIC, naddKinEnergy);
     }
   }
-  std::cout << std::endl;
-  printSubSectionTitle("Final Freeze-and-Thaw Energies");
-  for (unsigned int nSystem = 0; nSystem < _activeSystems.size(); nSystem++) {
-    printBigCaption((std::string) "Active System: " + _activeSystems[nSystem]->getSystemName());
-    auto eCont = _activeSystems[nSystem]->template getElectronicStructure<SCFMode>()->getEnergyComponentController();
-    eCont->printAllComponents();
+  OutputControl::nOut << std::endl;
+  if (settings.printResults) {
+    printSubSectionTitle("Final Freeze-and-Thaw Energies");
+    for (unsigned int nSystem = 0; nSystem < _activeSystems.size(); nSystem++) {
+      printBigCaption((std::string) "Active System: " + _activeSystems[nSystem]->getSystemName());
+      auto eCont = _activeSystems[nSystem]->template getElectronicStructure<SCFMode>()->getEnergyComponentController();
+      eCont->printAllComponents();
+    }
   }
 
   std::vector<std::shared_ptr<SystemController>> Systems;

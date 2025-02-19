@@ -19,6 +19,7 @@
  */
 
 /* Include Serenity Internal Headers */
+#include "dft/functionals/CompositeFunctionals.h"
 #include "settings/BasisOptions.h"
 #include "settings/CorrelatedMethodsOptions.h"
 #include "settings/DFTOptions.h"
@@ -122,7 +123,7 @@ void export_Options(py::module& spy) {
       .value("PLOT", GRID_PURPOSES::PLOT)
       .export_values();
   py::enum_<OPTIMIZATION_ALGORITHMS>(spy, "OPTIMIZATION_ALGORITHMS")
-      .value("SD", OPTIMIZATION_ALGORITHMS::SD)
+      .value("SQNM", OPTIMIZATION_ALGORITHMS::SQNM)
       .value("BFGS", OPTIMIZATION_ALGORITHMS::BFGS)
       .export_values();
   py::enum_<GRADIENT_TYPES>(spy, "GRADIENT_TYPES")
@@ -263,5 +264,9 @@ void export_Options(py::module& spy) {
       .value("REAL", STABILITY_ANALYSIS::REAL)
       .value("NONREAL", STABILITY_ANALYSIS::NONREAL)
       .value("SPINFLIP", STABILITY_ANALYSIS::SPINFLIP)
+      .export_values();
+  py::enum_<Serenity::CompositeFunctionals::IMPLEMENTATIONS>(spy, "XC_IMPLEMENTATIONS")
+      .value("XCFUN", Serenity::CompositeFunctionals::IMPLEMENTATIONS::XCFUN)
+      .value("LIBXC", Serenity::CompositeFunctionals::IMPLEMENTATIONS::LIBXC)
       .export_values();
 }

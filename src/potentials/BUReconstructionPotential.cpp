@@ -186,7 +186,9 @@ void BUReconstructionPotential<SCFMode>::calculatePotential() {
    * Hybrid functional?
    */
   auto envSystemZero = _envSystems[0].lock();
-  auto functional = resolveFunctional(envSystemZero->getSettings().dft.functional);
+  auto functional = envSystemZero->getSettings().customFunc.basicFunctionals.size()
+                        ? Functional(envSystemZero->getSettings().customFunc)
+                        : resolveFunctional(envSystemZero->getSettings().dft.functional);
   double exc = _carterCycles != 0 ? -1.0 : functional.isHybrid() ? functional.getHfExchangeRatio() : -1.0;
 
   /*

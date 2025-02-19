@@ -347,8 +347,8 @@ void LocalCorrelationController::constructFockMatrix() {
   if (_settings.reuseFockMatrix &&
       !(_settings.enforceHFFockian && _activeSystem->getSettings().method != Options::ELECTRONIC_STRUCTURE_THEORIES::HF)) {
     /*
-     * 1. Try to get the last Fock matrix form the electronic structure.
-     * 2. If fails: Try to read the Fock matrix from disk.
+     * 1. Try to get the last Fock matrix from the electronic structure.
+     * 2. If that fails: Try to read the Fock matrix from disk.
      * 3. Otherwise: Build the Fock matrix from scratch.
      */
     auto electronicStructure = _activeSystem->getElectronicStructure<RESTRICTED>();
@@ -426,7 +426,7 @@ void LocalCorrelationController::constructFockMatrix() {
       activeFockConstructor = _activeSystem->getPotentials<RESTRICTED, Options::ELECTRONIC_STRUCTURE_THEORIES::DFT>();
     }
     else {
-      throw SerenityError("ERROR: None existing electronicStructureTheory requested.");
+      throw SerenityError("ERROR: Nonexistent electronicStructureTheory requested.");
     }
   }
   f = activeFockConstructor->getFockMatrix(_activeSystem->getElectronicStructure<RESTRICTED>()->getDensityMatrix(),

@@ -126,10 +126,6 @@ class ElectronicStructure {
     _densityMatrixController->attachOrbitals(_molecularOrbitals, _densityMatrixController->getOccupations());
   }
 
-  //  inline void setDensityMatrixController(std::shared_ptr<DensityMatrixController<SCFMode> > newDensMatCont) {
-  //	  _densityMatrixController = newDensMatCont;
-  //  }
-
   /* ===============================
    *             Energies
    * =============================== */
@@ -186,7 +182,8 @@ class ElectronicStructure {
    * @return Returns the potentials used to generate the FockMatrix.
    */
   inline std::shared_ptr<PotentialBundle<SCFMode>> getPotentialBundle() {
-    assert(_potentials && "No potentials available in the electronic structure.");
+    if (!_potentials)
+      throw SerenityError("No potentials available in the electronic structure.");
     return _potentials;
   }
   ///@brief whether a fock matrix exists

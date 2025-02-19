@@ -507,11 +507,11 @@ class Libint {
    */
   std::mutex _lock;
   /**
-   * Assuming all used basis sets have <= 20 primitives per basis function.
+   * Assuming all used basis sets have <= 23 primitives per basis function.
    * If more are used just increase this number; Libint objects will then
    * only take slightly more memory.
    */
-  static const unsigned int N_PRIM_MAX = 20;
+  static const unsigned int N_PRIM_MAX = 23;
   /**
    * Libint will truncate the primitive functions at some point. Thus, we have to make sure that
    * the error introduced like this in the final contracted integral set does not exceed our required
